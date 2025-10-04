@@ -352,7 +352,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Button asChild size="lg" className="fixed bottom-6 right-6 rounded-full bg-accent shadow-lg transition-transform hover:scale-105 h-auto py-3 px-5">
             <Link href="/post" className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
-                <span className="font-semibold">Post</span>
+                <span className="font-semibold">Sell</span>
             </Link>
         </Button>
       </div>
