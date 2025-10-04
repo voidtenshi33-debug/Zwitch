@@ -32,7 +32,7 @@ const sampleItems: Item[] = [
       condition: "Used - Like New",
       listingType: "Sell",
       price: 8000,
-      imageUrls: ["https://images.unsplash.com/photo-1546435770-a3e426bf40B1?q=80&w=800&auto=format&fit=crop"],
+      imageUrls: ["https://images.unsplash.com/photo-1618399329938-a337c76f6b53?q=80&w=800&auto=format&fit=crop"],
       locality: "Baner",
       ownerId: "user_02",
       ownerName: "Anjali Sharma",
@@ -294,3 +294,5 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
     </div>
   )
 }
+
+    
