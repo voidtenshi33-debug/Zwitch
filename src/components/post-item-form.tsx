@@ -8,7 +8,7 @@ import React, { useEffect, useState, Suspense, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { collection, addDoc, Timestamp } from "firebase/firestore"
+import { collection, addDoc, Timestamp, doc, setDoc } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useDebounce } from "use-debounce";
 
@@ -140,7 +140,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
     if (valuationData) {
         form.setValue('title', valuationData.suggestedTitle);
         form.setValue('category', valuationData.suggestedCategory);
-        form.setValue('description', valuationData.suggestedDescription);
+        form.setValue('description', valuationData.suggestedDescription, { shouldValidate: true });
         form.setValue('images', valuationData.images);
         
         const previews = valuationData.images.map(file => URL.createObjectURL(file));
@@ -223,7 +223,6 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
   
   const uploadImages = async (images: File[], docId: string): Promise<string[]> => {
     const storage = getStorage();
-    const imageUrls: string[] = [];
     
     const uploadPromises = images.map(image => {
         const storageRef = ref(storage, `items/${docId}/${image.name}`);
@@ -232,8 +231,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
 
     try {
         const urls = await Promise.all(uploadPromises);
-        imageUrls.push(...urls);
-        return imageUrls;
+        return urls;
     } catch (error) {
         console.error("Error uploading images:", error);
         toast({
@@ -241,7 +239,6 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             title: "Image Upload Failed",
             description: "There was an error uploading your images. Please try again.",
         });
-        // Re-throw the error to be caught by the onSubmit handler
         throw error;
     }
 };
@@ -254,13 +251,14 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
     setIsSubmitting(true);
 
     try {
-        // 1. Upload images and get their URLs
-        // We use a temporary ID for the storage path to avoid collisions
-        const tempDocId = collection(firestore, "items").doc().id;
-        const imageUrls = await uploadImages(values.images, tempDocId);
+        // 1. Create a document reference with a new auto-generated ID
+        const newDocRef = doc(collection(firestore, "items"));
 
-        // 2. Now, create the document in Firestore with the real image URLs
-        await addDoc(collection(firestore, "items"), {
+        // 2. Upload images using the new document's ID for the storage path
+        const imageUrls = await uploadImages(values.images, newDocRef.id);
+
+        // 3. Now, create the document in Firestore with the real image URLs
+        await setDoc(newDocRef, {
             title: values.title,
             brand: values.brand,
             description: values.description,
@@ -284,22 +282,18 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             description: "Your item has been listed.",
         });
 
-        // 3. Navigate away and reset the form
+        // 4. Navigate away and reset the form
         router.push('/dashboard');
         form.reset();
         setImagePreviews([]);
 
     } catch (error) {
         console.error("Error submitting form:", error);
-        // Toast for specific image upload failure is handled in `uploadImages`
-        // This is a more general fallback.
-        if (!toast.toString().includes("Image Upload Failed")) {
-            toast({
-                variant: 'destructive',
-                title: 'Submission Failed',
-                description: 'There was an error posting your item. Please try again.',
-            });
-        }
+        toast({
+            variant: 'destructive',
+            title: 'Submission Failed',
+            description: 'There was an error posting your item. Please try again.',
+        });
     } finally {
         setIsSubmitting(false);
     }
@@ -428,7 +422,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             <FormItem>
               <FormLabel>Brand</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating} />
+                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating || !!valuationData} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -441,7 +435,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating || !!valuationData}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category for your electronic device" />
@@ -463,7 +457,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating} />
+                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating || !!valuationData} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -681,3 +675,5 @@ export function PostItemForm({ valuationData }: PostItemFormProps) {
 }
 
   
+
+    
