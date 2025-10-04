@@ -12,9 +12,9 @@ import { ItemCard } from "@/components/item-card"
 import { items as allItems } from "@/lib/data"
 import { CategoryScroller } from "@/components/category-scroller"
 import { categories } from "@/lib/categories"
-import { useUser } from '@/firebase'; // Assuming useUser gives access to user profile
 
 export default function DashboardPage({ selectedLocality }: { selectedLocality: string }) {
+  // In a real app, this data would be fetched from Firestore based on the selectedLocality
   const filteredItems = allItems.filter(item => item.locality === selectedLocality);
 
   return (

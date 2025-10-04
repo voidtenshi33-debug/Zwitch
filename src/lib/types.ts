@@ -9,7 +9,7 @@ export type User = {
   joinDate: string;
   avgRating: number;
   itemsRecycled: number;
-  lastKnownLocality?: string;
+  lastKnownLocality: string;
 };
 
 export type ItemCondition = 'New' | 'Used - Like New' | 'Used - Good' | 'Needs Minor Repair' | 'For Spare Parts';

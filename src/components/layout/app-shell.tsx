@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [currentLocality, setCurrentLocality] = useState('Pune');
+  const [currentLocality, setCurrentLocality] = useState('Kothrud'); // Default locality
   const [locationSearch, setLocationSearch] = useState('');
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -68,6 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { data: userProfile } = useDoc<UserType>(userRef);
 
   useEffect(() => {
+    // Set locality from user profile once it loads
     if (userProfile?.lastKnownLocality) {
       setCurrentLocality(userProfile.lastKnownLocality);
     }
@@ -110,20 +111,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    if (auth) {
+      await signOut(auth);
+    }
     router.push('/login');
   };
   
   const handleSelectLocality = (locality: string) => {
       setCurrentLocality(locality);
-      if (user) {
+      if (user && firestore) {
         const userDocRef = doc(firestore, "users", user.uid);
         setDocumentNonBlocking(userDocRef, { lastKnownLocality: locality }, { merge: true });
       }
       setIsLocationModalOpen(false);
-      // This will trigger a re-render in DashboardPage because the prop changes.
-      // We pass the locality to the children.
-      // A more robust solution might use a global state manager (Context/Redux).
   };
 
   const handleDetectLocation = () => {
@@ -174,7 +174,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
   
   const childrenWithProps = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
+    if (React.isValidElement(child) && child.type === require('@/app/(app)/dashboard/page').default) {
       // @ts-ignore
       return React.cloneElement(child, { selectedLocality: currentLocality });
     }
@@ -273,7 +273,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 />
                 {recognitionRef.current && (
                    <Button type="button" size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={handleListen}>
-                     <Mic className="h-4 w-4" />
+                     <Mic className={cn("h-4 w-4", isListening && "text-primary animate-pulse")} />
                    </Button>
                 )}
               </div>

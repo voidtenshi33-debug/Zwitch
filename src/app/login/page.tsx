@@ -54,7 +54,6 @@ export default function LoginPage() {
         email: user.email,
         createdAt: new Date().toISOString(),
         joinDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        // Set default values if they don't exist
         avgRating: 0,
         itemsRecycled: 0,
         lastKnownLocality: 'Kothrud',

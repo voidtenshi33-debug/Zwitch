@@ -306,7 +306,7 @@ export function PostItemForm() {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your locality in Pune" />
-                    </SelectTrigger>
+                    </Trigger>
                   </FormControl>
                   <SelectContent>
                     {popularLocations.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
