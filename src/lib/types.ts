@@ -2,8 +2,10 @@ import type { ImagePlaceholder } from './placeholder-images';
 
 export type User = {
   id: string;
-  name: string;
-  avatarUrl: string;
+  displayName: string | null;
+  photoURL: string | null;
+  email: string | null;
+  createdAt: string;
   joinDate: string;
   avgRating: number;
   itemsRecycled: number;
@@ -21,14 +23,22 @@ export type Item = {
   condition: ItemCondition;
   listingType: ListingType;
   image: ImagePlaceholder;
-  seller: User;
+  seller: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+  };
   postedAt: string;
   location: string;
 };
 
 export type Chat = {
     id: string;
-    user: User;
+    user: {
+        id: string;
+        name: string;
+        avatarUrl: string;
+    };
     lastMessage: string;
     lastMessageTimestamp: string;
     unreadCount: number;
@@ -38,7 +48,10 @@ export type ChatMessage = {
     id:string;
     text: string;
     timestamp: string;
-    sender: 'me' | User;
+    sender: 'me' | {
+        name: string;
+        avatarUrl: string;
+    };
     read: boolean;
 };
 

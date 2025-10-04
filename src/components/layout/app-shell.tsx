@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Bell, Home, Heart, MessageSquare, PlusSquare, User, Menu, Search, LogOut, Settings, PanelLeft, X
 } from 'lucide-react';
@@ -14,8 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
-import { loggedInUser, notifications } from '@/lib/data';
+import { notifications } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Home' },
@@ -25,10 +27,47 @@ const navItems = [
   { href: '/profile', icon: User, label: 'Profile' },
 ];
 
+function getInitials(name: string | null | undefined) {
+  if (!name) return "";
+  const names = name.split(' ');
+  const initials = names.map(n => n.charAt(0)).join('');
+  return initials.toUpperCase();
+}
+
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = React.useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+  
+  const loggedInUser = {
+      name: user?.displayName || "Anonymous",
+      avatarUrl: user?.photoURL || "",
+  }
+
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // Or redirect to login page
+     if (typeof window !== 'undefined') {
+      router.push('/login');
+    }
+    return null;
+  }
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] dark:bg-background">
@@ -154,7 +193,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={loggedInUser.avatarUrl} alt={loggedInUser.name} />
-                  <AvatarFallback>{loggedInUser.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{getInitials(loggedInUser.name)}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">Toggle user menu</span>
               </Button>
@@ -165,7 +204,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

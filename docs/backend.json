@@ -11,16 +11,16 @@
           "description": "Unique identifier for the user.  This is the Firebase Authentication UID."
         },
         "displayName": {
-          "type": "string",
+          "type": ["string", "null"],
           "description": "The user's full name."
         },
         "photoURL": {
-          "type": "string",
+          "type": ["string", "null"],
           "description": "URL of the user's profile picture.  Can be null if not set.",
           "format": "uri"
         },
         "email": {
-          "type": "string",
+          "type": ["string", "null"],
           "description": "The user's email address.",
           "format": "email"
         },
@@ -29,25 +29,21 @@
           "description": "The date and time the user account was created.",
           "format": "date-time"
         },
-        "averageStarRating": {
+        "avgRating": {
           "type": "number",
-          "description": "The average star rating of the user based on feedback from other users.",
-          "format": "number"
+          "description": "The average star rating of the user based on feedback from other users."
         },
         "joinDate": {
           "type": "string",
-          "description": "The date the user joined the platform.",
-          "format": "date-time"
+          "description": "The date the user joined the platform."
         },
-        "totalItemsRecycled": {
+        "itemsRecycled": {
           "type": "number",
           "description": "The total number of items the user has recycled through the platform."
         }
       },
       "required": [
         "id",
-        "displayName",
-        "email",
         "createdAt"
       ]
     }
@@ -55,7 +51,7 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "google.com"
     ]
   },
   "firestore": {
@@ -76,7 +72,6 @@
           ]
         }
       }
-    ],
-    "reasoning": "This Firestore structure is designed to support Zwitch's core features, including user management, item posting/searching, direct contact, and more. The key principle is Authorization Independence, achieved through denormalization where necessary. User data is stored in `/users/{userId}`, with `userId` matching the Firebase Auth UID. This enables path-based access control for user-specific data. To support QAPs, we ensure structural segregation; for instance, user profiles and admin roles are stored in separate collections, each with distinct security requirements. This design avoids hierarchical authorization dependencies, making security rules more straightforward and robust."
+    ]
   }
 }
