@@ -28,10 +28,13 @@ export type Item = {
       id: string;
       name: string;
       avatarUrl: string;
+      avgRating: number;
   };
   postedAt: string;
   location: string;
   locality: string;
+  isFeatured?: boolean;
+  isVerified?: boolean;
 };
 
 export type Chat = {

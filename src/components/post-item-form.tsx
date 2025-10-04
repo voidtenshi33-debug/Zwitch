@@ -173,7 +173,7 @@ export function PostItemForm() {
 
 
   return (
-    (<Form {...form}>
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
@@ -285,7 +285,7 @@ export function PostItemForm() {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the item's condition" />
-                    </SelectTrigger>
+                    </Trigger>
                   </FormControl>
                   <SelectContent>
                     {conditions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -366,8 +366,8 @@ export function PostItemForm() {
                 <FormLabel>Price</FormLabel>
                 <FormControl>
                     <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
-                        <Input type="number" placeholder="25.00" className="pl-7" {...field} />
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
+                        <Input type="number" placeholder="2500" className="pl-7" {...field} />
                     </div>
                 </FormControl>
                 <FormMessage />
@@ -381,6 +381,6 @@ export function PostItemForm() {
           Post My Item
         </Button>
       </form>
-    </Form>)
+    </Form>
   )
 }
