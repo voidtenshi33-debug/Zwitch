@@ -13,110 +13,13 @@ import {
 import { ItemCard } from "@/components/item-card"
 import { CategoryScroller } from "@/components/category-scroller"
 import { useFirestore, useMemoFirebase, useUser, useDoc, useCollection } from '@/firebase';
-import { collection, query, where, orderBy, endAt, startAt, limit, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, doc, Query } from 'firebase/firestore';
 import type { Item, User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Package, Gift, Star } from 'lucide-react';
 import Image from 'next/image';
-
-
-// --- Mock Data ---
-const sampleItems: Item[] = [
-    {
-      id: 'item-1',
-      title: "Sony Noise-Cancelling Headphones",
-      description: "WH-1000XM4 model. Excellent condition, comes with the original case. The sound quality is amazing.",
-      category: "Audio Devices",
-      condition: "Used - Like New",
-      listingType: "Sell",
-      price: 8000,
-      imageUrls: ["https://images.unsplash.com/photo-1546435770-a3e426bf40B1?q=80&w=800&auto=format&fit=crop"],
-      locality: "Baner",
-      ownerId: "user_02",
-      ownerName: "Anjali Sharma",
-      ownerAvatarUrl: "https://i.pravatar.cc/150?u=anjali",
-      ownerRating: 4.9,
-      status: "Available",
-      isFeatured: true,
-      postedAt: Timestamp.fromDate(new Date()),
-    },
-    {
-      id: 'item-2',
-      title: "Dell XPS 13 Laptop (2020 Model)",
-      description: "Good condition, works perfectly for coding and daily use. Has a few minor scratches on the lid. Comes with original charger.",
-      category: "Laptops",
-      condition: "Used - Good",
-      listingType: "Sell",
-      price: 35000,
-      imageUrls: ["https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop"],
-      locality: "Kothrud",
-      ownerId: "user_01",
-      ownerName: "Rohan Kumar",
-      ownerAvatarUrl: "https://i.pravatar.cc/150?u=rohan",
-      ownerRating: 4.8,
-      status: "Available",
-      isFeatured: false,
-      postedAt: Timestamp.fromDate(new Date()),
-    },
-    {
-      id: 'item-3',
-      title: "Apple iPhone X - For Donation",
-      description: "Screen has a crack in the corner but is fully functional. Battery health is at 75%. Good for a spare phone or parts. Giving it away for free.",
-      category: "Mobiles",
-      condition: "Needs Minor Repair",
-      listingType: "Donate",
-      price: 0,
-      imageUrls: ["https://images.unsplash.com/photo-1592224907029-2b5e03a088a2?q=80&w=800&auto=format&fit=crop"],
-      locality: "Viman Nagar",
-      ownerId: "user_02",
-      ownerName: "Anjali Sharma",
-      ownerAvatarUrl: "https://i.pravatar.cc/150?u=anjali",
-      ownerRating: 4.9,
-      status: "Available",
-      isFeatured: true,
-      postedAt: Timestamp.fromDate(new Date()),
-    },
-    {
-      id: 'item-4',
-      title: "Logitech Mechanical Gaming Keyboard",
-      description: "RGB backlit mechanical keyboard. All keys and lights working perfectly. Great for gaming and typing.",
-      category: "Keyboards & Mice",
-      condition: "Used - Like New",
-      listingType: "Sell",
-      price: 2500,
-      imageUrls: ["https://images.unsplash.com/photo-1618384887924-2f80214156b2?q=80&w=800&auto=format&fit=crop"],
-      locality: "Hadapsar",
-      ownerId: "user_03",
-      ownerName: "Vikram Singh",
-      ownerAvatarUrl: null,
-      ownerRating: 4.5,
-      status: "Available",
-      isFeatured: false,
-      postedAt: Timestamp.fromDate(new Date()),
-    },
-    {
-      id: 'item-5',
-      title: "Samsung 24-inch Monitor (for parts)",
-      description: "The monitor does not turn on. Might be an issue with the power supply. The screen panel itself is not cracked. Good for someone who can repair it or use it for spare parts.",
-      category: "Monitors",
-      condition: "For Spare Parts",
-      listingType: "Donate",
-      price: 0,
-      imageUrls: ["https://images.unsplash.com/photo-1586221434133-28b3a03358c5?q=80&w=800&auto=format&fit=crop"],
-      locality: "Viman Nagar",
-      ownerId: "user_02",
-      ownerName: "Anjali Sharma",
-      ownerAvatarUrl: "https://i.pravatar.cc/150?u=anjali",
-      ownerRating: 4.9,
-      status: "Available",
-      isFeatured: false,
-      postedAt: Timestamp.fromDate(new Date()),
-    },
-];
-// --- End Mock Data ---
-
 
 interface DashboardPageProps {
   selectedLocality?: string;
@@ -162,56 +65,76 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
   const { data: userProfile } = useDoc<User>(userRef);
   const userWishlist = userProfile?.wishlist || [];
 
-  // --- MOCK DATA IMPLEMENTATION ---
-  const [isLoading, setIsLoading] = useState(true);
-  const [featuredItems, setFeaturedItems] = useState<Item[]>([]);
-  const [donationItems, setDonationItems] = useState<Item[]>([]);
-  const [recommendedItems, setRecommendedItems] = useState<Item[]>([]);
+  const baseItemsQuery = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return collection(firestore, 'items');
+  }, [firestore]);
 
-  useEffect(() => {
-    setIsLoading(true);
-    // Simulate network delay
-    setTimeout(() => {
-      let filteredItems = sampleItems;
+  const filteredQuery = useMemoFirebase(() => {
+      if (!baseItemsQuery) return null;
 
-      if(selectedLocality) {
-          filteredItems = sampleItems.filter(item => item.locality === selectedLocality);
+      let q: Query = query(baseItemsQuery, where('status', '==', 'Available'));
+
+      if (selectedLocality) {
+          q = query(q, where('locality', '==', selectedLocality));
       }
 
       if (activeCategory !== 'All') {
-        filteredItems = filteredItems.filter(item => item.category === activeCategory);
+          q = query(q, where('category', '==', activeCategory));
       }
+      
+      // Full text search is complex with Firestore.
+      // A simple `where` clause for partial matches isn't supported.
+      // For a real app, a search service like Algolia or Typesense is recommended.
+      // For this demo, we will filter on the client after fetching.
+      
+      return q;
+  }, [baseItemsQuery, selectedLocality, activeCategory]);
 
+  const { data: items, isLoading: areItemsLoading } = useCollection<Item>(filteredQuery);
+  
+  const recommendedItems = useMemo(() => {
+      if (!items) return [];
       if (searchText && searchText.length >= 3) {
-          filteredItems = filteredItems.filter(item =>
+          return items.filter(item =>
               item.title.toLowerCase().includes(searchText.toLowerCase())
           );
       }
-      
-      setFeaturedItems(sampleItems.filter(item => item.isFeatured && (selectedLocality ? item.locality === selectedLocality : true)));
-      setDonationItems(sampleItems.filter(item => item.listingType === 'Donate' && (selectedLocality ? item.locality === selectedLocality : true)));
-      setRecommendedItems(filteredItems);
-      setIsLoading(false);
-    }, 500);
+      return items;
+  }, [items, searchText]);
 
-  }, [selectedLocality, activeCategory, searchText]);
-  // --- END MOCK DATA IMPLEMENTATION ---
+  const featuredQuery = useMemoFirebase(() => {
+      if (!baseItemsQuery) return null;
+      let q: Query = query(baseItemsQuery, where('isFeatured', '==', true), where('status', '==', 'Available'), limit(5));
+       if (selectedLocality) {
+          q = query(q, where('locality', '==', selectedLocality));
+      }
+      return q;
+  }, [baseItemsQuery, selectedLocality]);
+  const { data: featuredItems, isLoading: areFeaturedLoading } = useCollection<Item>(featuredQuery);
+
+  const donationQuery = useMemoFirebase(() => {
+      if (!baseItemsQuery) return null;
+      let q: Query = query(baseItemsQuery, where('listingType', '==', 'Donate'), where('status', '==', 'Available'), limit(5));
+      if (selectedLocality) {
+          q = query(q, where('locality', '==', selectedLocality));
+      }
+      return q;
+  }, [baseItemsQuery, selectedLocality]);
+  const { data: donationItems, isLoading: areDonationsLoading } = useCollection<Item>(donationQuery);
+  
+  const isLoading = areItemsLoading || areFeaturedLoading || areDonationsLoading;
 
   const handleCategoryChange = (categoryName: string) => {
     setActiveCategory(categoryName);
   };
   
-  if (isLoading) {
-    // Keep skeleton for loading state
-  }
-
-
   return (
     <div className="space-y-8">
       {/* Hero Section */}
       <div className="relative aspect-[2/1] md:aspect-[3/1] w-full overflow-hidden rounded-xl bg-secondary">
           <Image
-              src="https://images.unsplash.com/photo-1611270418597-a6c7717b1b98?q=80&w=2070&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1628260119619-2d37f1352945?q=80&w=2070&auto=format&fit=crop"
               alt="E-waste recycling"
               fill
               className="object-cover"
@@ -294,7 +217,5 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
     </div>
   )
 }
-
-    
 
     

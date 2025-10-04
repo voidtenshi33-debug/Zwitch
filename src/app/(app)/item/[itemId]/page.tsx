@@ -29,40 +29,79 @@ import {
 } from '@/components/ui/carousel';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import type { Item, User } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function getInitials(name: string | null | undefined) {
+  if (!name) return "";
+  const names = name.split(' ');
+  const initials = names.map(n => n.charAt(0)).join('');
+  return initials.toUpperCase();
+}
 
 
-// This is a placeholder for the actual item data.
-// In a real implementation, you would fetch this data from Firestore based on the `itemId` param.
-const mockItem = {
-    id: 'item-1',
-    title: "Sony Noise-Cancelling Headphones",
-    price: 8000,
-    listingType: 'Sell',
-    imageUrls: [
-        "https://images.unsplash.com/photo-1546435770-a3e426bf40B1?q=80&w=1200&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1613040809024-b4efc1ba69c7?q=80&w=1200&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1596700247352-32b3a88b58aaa?q=80&w=1200&auto=format&fit=crop",
-    ],
-    tags: ["Audio Devices", "Working", "Featured"],
-    description: "WH-1000XM4 model. Excellent condition, comes with the original case. The sound quality is amazing. I've only used it for about 6 months and am selling because I got a new pair as a gift. No scratches or marks.",
-    locality: 'Baner',
-    seller: {
-        name: 'Anjali Sharma',
-        avatarUrl: 'https://i.pravatar.cc/150?u=anjali',
-        rating: 4.9,
-        reviews: 15,
-        joinedDate: 'October 2023',
-        isTrusted: true,
-        badges: [
-            { icon: ShieldCheck, text: 'ID Verified' },
-            { icon: Award, text: '8+ Gadgets Recycled' },
-            { icon: Zap, text: 'Quick Responder' },
-        ],
-    },
-};
+const mockSellerBadges = [
+    { icon: ShieldCheck, text: 'ID Verified' },
+    { icon: Award, text: '8+ Gadgets Recycled' },
+    { icon: Zap, text: 'Quick Responder' },
+];
+
 
 export default function ItemDetailsPage({ params }: { params: { itemId: string } }) {
-  const isTrustedSeller = mockItem.seller.isTrusted;
+  const firestore = useFirestore();
+
+  const itemRef = useMemoFirebase(() => {
+    if (!firestore || !params.itemId) return null;
+    return doc(firestore, 'items', params.itemId);
+  }, [firestore, params.itemId]);
+  const { data: item, isLoading: isItemLoading } = useDoc<Item>(itemRef);
+
+  const sellerRef = useMemoFirebase(() => {
+    if (!firestore || !item?.ownerId) return null;
+    return doc(firestore, 'users', item.ownerId);
+  }, [firestore, item?.ownerId]);
+  const { data: seller, isLoading: isSellerLoading } = useDoc<User>(sellerRef);
+  
+  const isLoading = isItemLoading || isSellerLoading;
+
+  if (isLoading) {
+    return (
+        <div className="container mx-auto max-w-5xl py-6">
+            <Skeleton className="h-6 w-48 mb-4" />
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-12">
+                <div className="md:col-span-3">
+                    <Skeleton className="w-full aspect-[4/3] rounded-xl" />
+                </div>
+                <div className="md:col-span-2 space-y-6">
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                            <Skeleton className="h-6 w-20 rounded-full" />
+                            <Skeleton className="h-6 w-24 rounded-full" />
+                        </div>
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-8 w-32" />
+                    </div>
+                    <Separator />
+                    <Skeleton className="h-28 w-full" />
+                    <Separator />
+                    <div>
+                        <Skeleton className="h-8 w-24 mb-2" />
+                        <Skeleton className="h-5 w-40 mb-3" />
+                        <Skeleton className="aspect-video w-full rounded-lg" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+  }
+
+  if (!item) {
+    return <div>Item not found.</div>;
+  }
+  
+  const isTrustedSeller = true; // Replace with actual logic, e.g., seller?.isTrusted
 
   return (
     <div className="container mx-auto max-w-5xl py-6">
@@ -75,14 +114,14 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
             <div className="md:col-span-3">
                 <Carousel className="w-full">
                 <CarouselContent>
-                    {mockItem.imageUrls.map((url, index) => (
+                    {item.imageUrls.map((url, index) => (
                     <CarouselItem key={index}>
                         <Card className="overflow-hidden rounded-xl">
                             <CardContent className="p-0">
                             <div className="aspect-[4/3] relative">
                                 <Image
                                 src={url}
-                                alt={`${mockItem.title} image ${index + 1}`}
+                                alt={`${item.title} image ${index + 1}`}
                                 fill
                                 className="object-cover"
                                 />
@@ -99,7 +138,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                 {/* Description for Desktop */}
                 <div className="hidden md:block mt-8">
                      <h2 className="text-xl font-bold mb-2 font-headline">Description</h2>
-                    <p className="text-muted-foreground">{mockItem.description}</p>
+                    <p className="text-muted-foreground">{item.description}</p>
                 </div>
             </div>
 
@@ -107,42 +146,40 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
             <div className="md:col-span-2 space-y-6">
                 <div className="space-y-3">
                     <div className="flex flex-wrap gap-2">
-                        {mockItem.tags.map(tag => (
-                            <Badge key={tag} variant={tag === 'Featured' ? 'default' : 'secondary'}>
-                                {tag === 'Featured' && <Star className="h-3 w-3 mr-1"/>}
-                                {tag}
-                            </Badge>
-                        ))}
+                        <Badge variant="secondary">{item.category}</Badge>
+                        <Badge variant="secondary">{item.condition}</Badge>
+                        {item.isFeatured && <Badge><Star className="h-3 w-3 mr-1"/>Featured</Badge>}
                     </div>
-                    <h1 className="font-headline text-3xl md:text-4xl font-bold">{mockItem.title}</h1>
+                    <h1 className="font-headline text-3xl md:text-4xl font-bold">{item.title}</h1>
                     <p className="font-headline text-2xl font-bold text-foreground">
-                        {mockItem.listingType === 'Sell' ? <span className="text-primary">For Sale</span> : <span className="text-primary">{mockItem.listingType}</span>}
+                        {item.listingType === 'Sell' ? <span className="text-primary">For Sale</span> : <span className="text-primary">{item.listingType}</span>}
                     </p>
                 </div>
 
                 <Separator />
                 
+                {seller && (
                 <Card className="overflow-hidden bg-muted/30">
                     <CardContent className="p-4">
                         <Link href="#" className="block hover:bg-muted/50 -m-4 p-4 rounded-lg">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                 <Avatar className="h-12 w-12 border-2 border-background">
-                                    <AvatarImage src={mockItem.seller.avatarUrl} />
-                                    <AvatarFallback>{mockItem.seller.name.charAt(0)}</AvatarFallback>
+                                    <AvatarImage src={seller.photoURL || undefined} />
+                                    <AvatarFallback>{getInitials(seller.displayName)}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-semibold">{mockItem.seller.name}</p>
+                                    <p className="font-semibold">{seller.displayName}</p>
                                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" />
-                                        <span>{mockItem.seller.rating} ({mockItem.seller.reviews} ratings)</span>
+                                        <span>{seller.avgRating?.toFixed(1) || '0.0'} (0 ratings)</span>
                                     </div>
                                 </div>
                                 </div>
                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
                             </div>
                             <div className="mt-4 grid grid-cols-2 sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
-                                {mockItem.seller.badges.map(badge => {
+                                {mockSellerBadges.map(badge => {
                                     const BadgeIcon = badge.icon;
                                     return (
                                         <div key={badge.text} className="flex items-center gap-1.5">
@@ -153,12 +190,13 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                                 })}
                                  <div className="flex items-center gap-1.5">
                                     <Clock className="h-4 w-4 text-primary" />
-                                    <span>Joined {mockItem.seller.joinedDate}</span>
+                                    <span>Joined {seller.joinDate}</span>
                                 </div>
                             </div>
                         </Link>
                     </CardContent>
                 </Card>
+                )}
 
                 <Separator />
                 
@@ -166,7 +204,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                     <h2 className="text-xl font-bold mb-2 font-headline">Location</h2>
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                         <MapPin className="h-5 w-5" />
-                        <span>{mockItem.locality}, Pune</span>
+                        <span>{item.locality}, Pune</span>
                     </div>
                      <Card>
                         <CardContent className="p-0">
@@ -181,7 +219,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                  <div className="md:hidden">
                      <Separator />
                      <h2 className="text-xl font-bold mb-2 mt-6 font-headline">Description</h2>
-                    <p className="text-muted-foreground">{mockItem.description}</p>
+                    <p className="text-muted-foreground">{item.description}</p>
                 </div>
             </div>
         </div>
@@ -190,10 +228,10 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
         <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur-sm md:static md:bottom-auto md:left-auto md:right-auto md:z-auto md:border-none md:bg-transparent md:p-0 z-50 md:mt-8">
             <div className="container mx-auto max-w-5xl p-4 md:p-0">
                 <div className="max-w-md ml-auto">
-                 {isTrustedSeller && mockItem.listingType === 'Sell' ? (
+                 {isTrustedSeller && item.listingType === 'Sell' ? (
                     <div className="grid grid-cols-2 gap-4">
                         <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" asChild>
-                            <Link href={`/order/summary?itemId=${mockItem.id}`}>Buy Now - ₹{mockItem.price.toLocaleString('en-IN')}</Link>
+                            <Link href={`/order/summary?itemId=${item.id}`}>Buy Now - ₹{item.price.toLocaleString('en-IN')}</Link>
                         </Button>
                         <Button size="lg" variant="outline"><MessageSquare className="mr-2 h-5 w-5"/>Message Seller</Button>
                     </div>
@@ -206,3 +244,5 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
     </div>
   );
 }
+
+    
