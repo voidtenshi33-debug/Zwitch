@@ -22,17 +22,17 @@ export function CategoryScroller({ activeCategory, onCategoryChange }: CategoryS
         {displayCategories.map((category) => {
           const isActive = category.name === activeCategory;
           return (
-            <div key={category.id} className="flex-shrink-0 text-center">
+            <div key={category.id} className="flex-shrink-0">
               <Button
                 variant={isActive ? "default" : "secondary"}
                 className={cn(
-                  "flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-2xl p-2 text-center transition-all duration-200 hover:shadow-lg",
+                  "flex h-24 flex-col items-center justify-center gap-2 rounded-2xl p-2 text-center transition-all duration-200 hover:shadow-lg min-w-[90px]",
                   isActive && "bg-primary text-primary-foreground"
                 )}
                 onClick={() => onCategoryChange(category.name)}
               >
-                  {category.id !== 0 && <category.icon className="h-8 w-8" />}
-                  <span className="text-xs font-medium leading-tight">{category.name}</span>
+                  {category.id !== 0 && <category.icon className="h-8 w-8 flex-shrink-0" />}
+                  <span className="text-xs font-medium leading-tight whitespace-normal break-words">{category.name}</span>
               </Button>
             </div>
           );
