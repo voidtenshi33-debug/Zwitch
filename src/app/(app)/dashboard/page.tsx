@@ -18,12 +18,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { Package } from 'lucide-react';
 
-export default function DashboardPage({ selectedLocality }: { selectedLocality: string }) {
+export default function DashboardPage({ selectedLocality }: { selectedLocality?: string }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const firestore = useFirestore();
 
   const itemsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // Defer the query until both firestore and selectedLocality are available.
+    if (!firestore || !selectedLocality) return null;
 
     const baseQuery = query(
       collection(firestore, "items"),
@@ -38,7 +39,7 @@ export default function DashboardPage({ selectedLocality }: { selectedLocality: 
     }
   }, [firestore, selectedLocality, activeCategory]);
 
-  const { data: items, isLoading } = useCollection<Item>(itemsQuery);
+  const { data: items, isLoading: areItemsLoading } = useCollection<Item>(itemsQuery);
 
   const sortOptions = [
     { value: "newest", label: "Newest" },
@@ -52,9 +53,12 @@ export default function DashboardPage({ selectedLocality }: { selectedLocality: 
     setActiveCategory(categoryName);
   };
 
-  const pageTitle = activeCategory === 'all'
+  const isLoading = areItemsLoading || !selectedLocality;
+
+  const pageTitle = selectedLocality ? (activeCategory === 'all'
     ? <>Browse Electronics in <span className="text-primary">{selectedLocality}</span></>
-    : <>{activeCategory} in <span className="text-primary">{selectedLocality}</span></>;
+    : <>{activeCategory} in <span className="text-primary">{selectedLocality}</span></>)
+    : "Loading Listings...";
 
 
   return (

@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [currentLocality, setCurrentLocality] = useState('Kothrud'); // Default locality
+  const [currentLocality, setCurrentLocality] = useState<string | undefined>(undefined); 
   const [locationSearch, setLocationSearch] = useState('');
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -64,14 +64,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile } = useDoc<UserType>(userRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserType>(userRef);
 
   useEffect(() => {
-    // Set locality from user profile once it loads
+    if (isProfileLoading) return;
+    
     if (userProfile?.lastKnownLocality) {
       setCurrentLocality(userProfile.lastKnownLocality);
+    } else {
+      setCurrentLocality('Kothrud'); // Set default if not in profile
     }
-  }, [userProfile]);
+  }, [userProfile, isProfileLoading]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -264,8 +267,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <Button variant="ghost" className="shrink-0" onClick={() => setIsLocationModalOpen(true)}>
             <MapPin className="h-5 w-5" />
-            <span className="ml-2 hidden sm:inline">{currentLocality}, Pune</span>
-            <ChevronDown className="ml-1 h-4 w-4" />
+            {currentLocality ? (
+              <>
+                <span className="ml-2 hidden sm:inline">{currentLocality}, Pune</span>
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </>
+            ) : (
+              <span className="ml-2 hidden sm:inline">Select Location...</span>
+            )}
           </Button>
 
           <div className="w-full flex-1">
