@@ -6,6 +6,10 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import React from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { collection, addDoc, Timestamp } from "firebase/firestore"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -31,6 +35,7 @@ import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
 import { generateListingDescription } from "@/ai/flows/generate-listing-description"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
+import { useFirestore, useUser } from "@/firebase"
 
 const popularLocations = [
     'Kothrud',
@@ -55,7 +60,7 @@ const formSchema = z.object({
   listingType: z.enum(["Sell", "Donate", "Spare Parts"]),
   price: z.string().optional(),
   locality: z.string().min(1, "Please select your locality."),
-  images: z.array(z.any()).min(1, "Please upload at least one image."),
+  images: z.array(z.instanceof(File)).min(1, "Please upload at least one image."),
 }).refine(data => {
     if (data.listingType === "Sell") {
         return data.price && !isNaN(parseFloat(data.price)) && parseFloat(data.price) > 0;
@@ -70,6 +75,10 @@ const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'N
 
 export function PostItemForm() {
   const { toast } = useToast()
+  const router = useRouter()
+  const firestore = useFirestore()
+  const { user: authUser } = useUser()
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isDescriptionGenerating, setIsDescriptionGenerating] = React.useState(false)
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
 
@@ -89,14 +98,65 @@ export function PostItemForm() {
   
   const listingType = form.watch("listingType")
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    toast({
-      title: "Listing Submitted!",
-      description: "Your item has been submitted for review.",
-    })
-    form.reset();
-    setImagePreviews([]);
+  const uploadImages = async (images: File[]): Promise<string[]> => {
+    const storage = getStorage();
+    const imageUrls: string[] = [];
+    for (const image of images) {
+      const storageRef = ref(storage, `items/${Date.now()}_${image.name}`);
+      const snapshot = await uploadBytes(storageRef, image);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      imageUrls.push(downloadURL);
+    }
+    return imageUrls;
+  };
+
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore || !authUser) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to post an item.' });
+        return;
+    }
+    setIsSubmitting(true);
+    try {
+        const imageUrls = await uploadImages(values.images);
+        
+        await addDoc(collection(firestore, "items"), {
+            title: values.title,
+            description: values.description,
+            category: values.category,
+            condition: values.condition,
+            listingType: values.listingType,
+            price: values.listingType === 'Sell' ? parseFloat(values.price!) : 0,
+            locality: values.locality,
+            imageUrls: imageUrls,
+            ownerId: authUser.uid,
+            ownerName: authUser.displayName || "Anonymous",
+            ownerAvatarUrl: authUser.photoURL,
+            ownerRating: 0, // This would be calculated or fetched
+            status: 'Available',
+            isFeatured: false,
+            postedAt: Timestamp.now(),
+        });
+
+        toast({
+            title: "Listing Submitted!",
+            description: "Your item has been successfully listed.",
+        });
+        
+        form.reset();
+        setImagePreviews([]);
+        router.push('/dashboard');
+
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Submission Failed',
+            description: 'There was an error posting your item. Please try again.',
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +241,7 @@ export function PostItemForm() {
                     <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                         <ImagePlus className="h-8 w-8" />
                         <span className="mt-2 text-xs text-center">Add Image</span>
-                        <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} />
+                        <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isSubmitting} />
                     </label>
                   )}
                 </div>
@@ -198,7 +258,7 @@ export function PostItemForm() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} />
+                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -211,7 +271,7 @@ export function PostItemForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category" />
@@ -233,14 +293,14 @@ export function PostItemForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} />
+                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating} />
               </FormControl>
               <FormDescription>
                 Provide a title and category, and let AI help you write a great description.
               </FormDescription>
               <FormMessage />
               <div className="flex flex-wrap gap-2 pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating}>
+                <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating || isSubmitting}>
                   {isDescriptionGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Generate Description
                 </Button>
@@ -255,7 +315,7 @@ export function PostItemForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the item's condition" />
@@ -276,7 +336,7 @@ export function PostItemForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Locality</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your locality in Pune" />
@@ -305,6 +365,7 @@ export function PostItemForm() {
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
+                  disabled={isSubmitting}
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
@@ -341,7 +402,7 @@ export function PostItemForm() {
                 <FormControl>
                     <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="2500" className="pl-7" {...field} />
+                        <Input type="number" placeholder="2500" className="pl-7" {...field} disabled={isSubmitting} />
                     </div>
                 </FormControl>
                 <FormMessage />
@@ -351,10 +412,13 @@ export function PostItemForm() {
         )}
 
 
-        <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
+        <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Post My Item
         </Button>
       </form>
     </Form>
   )
 }
+
+    

@@ -21,7 +21,7 @@ export type Item = {
   id: string;
   title: string;
   description: string;
-  price: number | null;
+  price: number;
   category: string;
   condition: ItemCondition;
   listingType: ListingType;
@@ -69,3 +69,5 @@ export type Notification = {
     isRead: boolean;
     href: string;
 };
+
+    
