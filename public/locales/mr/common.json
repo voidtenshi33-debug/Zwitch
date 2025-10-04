@@ -1,15 +1,13 @@
-
 {
-  "post_item": "आयटम पोस्ट करा",
-  "my_wishlist": "माझी विशलिस्ट",
-  "search_placeholder": "उत्पादने शोधा...",
-  "select_location": "स्थान निवडा",
-  "home": "होम",
-  "chats": "चॅट्स",
-  "wishlist": "विशलिस्ट",
-  "profile": "प्रोफाइल",
-  "sell": "विक्री",
-  "english": "इंग्रजी",
-  "marathi": "मराठी",
-  "hindi": "हिंदी"
+    "home": "होम",
+    "chats": "चॅट्स",
+    "sell": "विक्री",
+    "wishlist": "इच्छासूची",
+    "profile": "प्रोफाइल",
+    "valuator": "मूल्यांकनकर्ता",
+    "select_location": "स्थान निवडा",
+    "search_placeholder": "उत्पादने शोधा...",
+    "english": "English",
+    "marathi": "मराठी",
+    "hindi": "हिन्दी"
 }

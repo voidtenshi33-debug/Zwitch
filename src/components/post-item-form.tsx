@@ -4,9 +4,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import React from "react"
+import React, { useEffect } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -78,6 +78,7 @@ const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'N
 export function PostItemForm() {
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const firestore = useFirestore()
   const { user: authUser } = useUser()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -90,9 +91,9 @@ export function PostItemForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      title: searchParams.get('title') || "",
       description: "",
-      category: "",
+      category: searchParams.get('category') || "",
       condition: "",
       listingType: "Sell",
       price: "",
@@ -100,6 +101,17 @@ export function PostItemForm() {
       images: [],
     },
   })
+
+  useEffect(() => {
+    const title = searchParams.get('title');
+    const category = searchParams.get('category');
+    if (title) {
+        form.setValue('title', title);
+    }
+    if (category) {
+        form.setValue('category', category);
+    }
+  }, [searchParams, form]);
   
   const listingType = form.watch("listingType")
 

@@ -1,15 +1,13 @@
-
 {
-  "post_item": "आइटम पोस्ट करें",
-  "my_wishlist": "मेरी इच्छा-सूची",
-  "search_placeholder": "उत्पाद खोजें...",
-  "select_location": "स्थान चुनें",
-  "home": "होम",
-  "chats": "चैट्स",
-  "wishlist": "विशलिस्ट",
-  "profile": "प्रोफ़ाइल",
-  "sell": "बेचें",
-  "english": "अंग्रेज़ी",
-  "marathi": "मराठी",
-  "hindi": "हिन्दी"
+    "home": "होम",
+    "chats": "चैट",
+    "sell": "बेचें",
+    "wishlist": "इच्छा-सूची",
+    "profile": "प्रोफ़ाइल",
+    "valuator": "मूल्यांकनकर्ता",
+    "select_location": "स्थान चुनें",
+    "search_placeholder": "उत्पाद खोजें...",
+    "english": "English",
+    "marathi": "मराठी",
+    "hindi": "हिन्दी"
 }

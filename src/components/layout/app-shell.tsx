@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown, Star, Languages
+  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown, Star, Languages, Tag
 } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import { appWithTranslation } from 'next-i18next';
@@ -32,6 +32,7 @@ const getNavItems = (t: Function) => [
   { href: '/dashboard', icon: Home, label: t('home') },
   { href: '/chat', icon: MessageSquare, label: t('chats') },
   { href: '/post', icon: Plus, label: t('sell'), isPrimary: true },
+  { href: '/valuator', icon: Tag, label: t('valuator')},
   { href: '/wishlist', icon: Heart, label: t('wishlist') },
   { href: '/profile', icon: User, label: t('profile') },
 ];
@@ -434,7 +435,7 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
         {/* Mobile Bottom Nav */}
         <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
             <nav className="grid grid-cols-5 items-center justify-items-center h-16 px-2">
-                {navItems.map(item => {
+                {navItems.filter(i => i.href !== '/valuator').map(item => { // Exclude valuator from mobile nav for now
                     const isPrimary = item.isPrimary;
                     const isActive = pathname === item.href;
 

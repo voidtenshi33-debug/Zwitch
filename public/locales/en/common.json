@@ -1,15 +1,13 @@
-
 {
-  "post_item": "Post Item",
-  "my_wishlist": "My Wishlist",
-  "search_placeholder": "Search products...",
-  "select_location": "Select Location",
-  "home": "Home",
-  "chats": "Chats",
-  "wishlist": "Wishlist",
-  "profile": "Profile",
-  "sell": "Sell",
-  "english": "English",
-  "marathi": "Marathi",
-  "hindi": "Hindi"
+    "home": "Home",
+    "chats": "Chats",
+    "sell": "Sell",
+    "wishlist": "Wishlist",
+    "profile": "Profile",
+    "valuator": "Valuator",
+    "select_location": "Select Location",
+    "search_placeholder": "Search products...",
+    "english": "English",
+    "marathi": "Marathi",
+    "hindi": "Hindi"
 }
