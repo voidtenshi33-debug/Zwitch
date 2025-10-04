@@ -194,5 +194,3 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
     </div>
   );
 }
-
-    
