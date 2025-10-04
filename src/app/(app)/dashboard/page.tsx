@@ -150,7 +150,7 @@ const ItemCarousel = ({ title, items, icon, viewAllHref, userWishlist }: { title
 };
 
 
-export default function DashboardPage({ selectedLocality, searchText }: DashboardPageProps) {
+export default function DashboardPage({ selectedLocality, searchText = "" }: DashboardPageProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const firestore = useFirestore();
   const { user: authUser } = useUser();
@@ -211,7 +211,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
       {/* Hero Section */}
       <div className="relative aspect-[2/1] md:aspect-[3/1] w-full overflow-hidden rounded-xl bg-secondary">
           <Image
-              src="https://images.unsplash.com/photo-1550505393-2c5dbec5de87?q=80&w=2070&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1615751072497-5f5169225a1f?q=80&w=2070&auto=format&fit=crop"
               alt="E-waste recycling"
               fill
               className="object-cover"
@@ -296,3 +296,4 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
 }
 
     
+
