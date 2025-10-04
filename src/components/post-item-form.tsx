@@ -420,7 +420,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             <FormItem>
               <FormLabel>Brand</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating || !!valuationData} />
+                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -433,7 +433,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating || !!valuationData}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category for your electronic device" />
@@ -455,7 +455,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating || !!valuationData} />
+                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating} />
               </FormControl>
               <FormMessage />
             </FormItem>
