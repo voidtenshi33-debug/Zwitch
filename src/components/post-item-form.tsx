@@ -1,15 +1,15 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import React, { useEffect, useState, Suspense } from "react"
+import React, { useEffect, useState, Suspense, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { collection, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useDebounce } from "use-debounce";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { ImagePlus, Loader2, Sparkles, X, Camera, Tag, ArrowRight } from "lucide-react"
 import { generateListingDescription } from "@/ai/flows/generate-listing-description"
+import { deviceValuator } from "@/ai/flows/device-valuator-flow"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
 import { useFirestore, useUser } from "@/firebase"
@@ -79,6 +80,14 @@ const formSchema = z.object({
 
 const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'Needs Minor Repair', 'For Spare Parts', 'Working', 'For Parts Only'];
 
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+  });
+};
 
 function PostItemFormContent() {
   const { toast } = useToast()
@@ -94,6 +103,7 @@ function PostItemFormContent() {
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+  const [isValuating, setIsValuating] = useState(false);
 
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -110,6 +120,14 @@ function PostItemFormContent() {
       images: [],
     },
   })
+  
+  const listingType = form.watch("listingType")
+  const formImages = form.watch('images');
+  const formBrand = form.watch('brand');
+  const formCategory = form.watch('category');
+
+  const [debouncedBrand] = useDebounce(formBrand, 500);
+  const [debouncedCategory] = useDebounce(formCategory, 500);
 
   useEffect(() => {
     const title = searchParams.get('title');
@@ -129,8 +147,51 @@ function PostItemFormContent() {
         form.setValue('price', initialPrice);
     }
   }, [searchParams, form]);
+
+
+  const triggerValuation = useCallback(async (brand: string, category: string, images: File[]) => {
+      if (isValuating || !brand || !category || images.length === 0) return;
+
+      setIsValuating(true);
+      toast({ title: 'AI Valuator Started', description: 'Analyzing your item to suggest a title, category, and price...' });
+      
+      try {
+          const photoDataUris = await Promise.all(images.map(fileToDataUri));
+          const result = await deviceValuator({
+              deviceType: category, // Using category as deviceType
+              model: brand, // Using brand as model
+              photoDataUris,
+          });
+
+          form.setValue('title', result.suggestedTitle, { shouldValidate: true });
+          form.setValue('category', result.suggestedCategory, { shouldValidate: true });
+          
+          if (form.getValues('listingType') === 'Sell') {
+            const min = result.estimatedMinValue;
+            const max = result.estimatedMaxValue;
+            setMinPrice(min);
+            setMaxPrice(max);
+            const initialPrice = Math.round((min + max) / 2);
+            setSelectedPrice(initialPrice);
+            form.setValue('price', initialPrice);
+          }
+
+          toast({ title: 'AI Valuation Complete!', description: 'We\'ve filled in some details for you.' });
+      } catch (error) {
+          console.error("Error during automatic valuation:", error);
+          toast({ variant: 'destructive', title: 'Valuation Failed', description: 'Could not automatically value your item.' });
+      } finally {
+          setIsValuating(false);
+      }
+  }, [form, isValuating, toast]);
   
-  const listingType = form.watch("listingType")
+  useEffect(() => {
+      // Trigger valuation only when these debounced values change and are valid
+      if (debouncedBrand && debouncedCategory && formImages.length > 0) {
+          triggerValuation(debouncedBrand, debouncedCategory, formImages);
+      }
+  }, [debouncedBrand, debouncedCategory, formImages, triggerValuation]);
+  
 
   const uploadImagesAndUpdateDoc = async (images: File[], docId: string): Promise<void> => {
     const storage = getStorage();
@@ -212,7 +273,7 @@ function PostItemFormContent() {
         toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 5 images.' });
         return;
     }
-    form.setValue("images", [...form.getValues("images"), ...files]);
+    form.setValue("images", [...form.getValues("images"), ...files], { shouldValidate: true });
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
   };
@@ -228,18 +289,9 @@ function PostItemFormContent() {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
     const currentImages = form.getValues("images");
     currentImages.splice(index, 1);
-    form.setValue("images", currentImages);
+    form.setValue("images", currentImages, { shouldValidate: true });
   };
   
-  const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-  };
-
   const handleGenerateDescription = async () => {
     const title = form.getValues("title");
     const category = form.getValues("category");
@@ -277,18 +329,20 @@ function PostItemFormContent() {
     <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <Alert className="bg-accent/10 border-accent/30">
-          <Tag className="h-4 w-4 text-accent" />
-          <AlertTitle className="text-accent">Unsure of the value?</AlertTitle>
-          <AlertDescription className="flex justify-between items-center">
-            <span className="text-accent/90">Let our AI Valuator suggest a price.</span>
-            <Button variant="link" className="text-accent" asChild>
-              <Link href="/valuator">
-                Use AI Valuator <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
+        {!minPrice && (
+            <Alert className="bg-accent/10 border-accent/30">
+            <Tag className="h-4 w-4 text-accent" />
+            <AlertTitle className="text-accent">Unsure of the value?</AlertTitle>
+            <AlertDescription className="flex justify-between items-center">
+                <span className="text-accent/90">Let our AI Valuator suggest a price.</span>
+                <Button variant="link" className="text-accent" asChild>
+                <Link href="/valuator">
+                    Use AI Valuator <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+                </Button>
+            </AlertDescription>
+            </Alert>
+        )}
 
         <FormField
           control={form.control}
@@ -296,6 +350,7 @@ function PostItemFormContent() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Images (up to 5)</FormLabel>
+              <FormDescription>The AI valuator will automatically run after you select a brand, category, and upload a photo.</FormDescription>
               <FormControl>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                   {imagePreviews.map((src, index) => (
@@ -328,26 +383,12 @@ function PostItemFormContent() {
         
         <FormField
           control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Listing Title</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="brand"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Brand</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting} />
+                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -360,7 +401,7 @@ function PostItemFormContent() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category for your electronic device" />
@@ -374,6 +415,20 @@ function PostItemFormContent() {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Listing Title</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <FormField
           control={form.control}
@@ -382,14 +437,14 @@ function PostItemFormContent() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your electronic item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating} />
+                <Textarea placeholder="Describe your electronic item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating || isValuating} />
               </FormControl>
                <FormDescription>
                 Provide a title and category, then let AI help you write a great description for your gadget.
               </FormDescription>
               <FormMessage />
               <div className="flex flex-wrap gap-2 pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating || isSubmitting}>
+                <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating || isSubmitting || isValuating}>
                   {isDescriptionGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Generate Description
                 </Button>
@@ -499,7 +554,7 @@ function PostItemFormContent() {
               <FormItem>
                 <div className="flex justify-between items-center">
                     <FormLabel>Price</FormLabel>
-                    {selectedPrice !== null && <span className="font-bold text-lg text-primary">₹{selectedPrice.toLocaleString('en-IN')}</span>}
+                    {isValuating ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : (selectedPrice !== null && <span className="font-bold text-lg text-primary">₹{selectedPrice.toLocaleString('en-IN')}</span>)}
                 </div>
                 {minPrice !== null && maxPrice !== null && selectedPrice !== null ? (
                     <>
@@ -532,7 +587,7 @@ function PostItemFormContent() {
                                     field.onChange(price);
                                     if(price !== undefined) setSelectedPrice(price); else setSelectedPrice(null);
                                 }}
-                                disabled={isSubmitting} 
+                                disabled={isSubmitting || isValuating} 
                             />
                         </div>
                     </FormControl>
