@@ -58,7 +58,7 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
         setDocumentNonBlocking(userRef, { wishlist: arrayUnion(item.id) }, { merge: true });
         toast({
           title: "Added to Wishlist!",
-          description: `${item.title} has been saved.`,
+          description: `${item.title} has been added to your collection.`,
         });
       } else {
         setDocumentNonBlocking(userRef, { wishlist: arrayRemove(item.id) }, { merge: true });
@@ -114,7 +114,7 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
               <Link href={`/item/${item.id}`} className="hover:underline z-10 relative">{item.title}</Link>
           </h3>
           <p className="font-headline text-xl font-bold text-foreground mt-1">
-            {item.listingType === "Sell" && item.price ? `₹${item.price.toLocaleString('en-IN')}` : <span className="text-primary">{item.listingType}</span>}
+            {item.listingType === "Sell" && item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : <span className="text-primary">{item.listingType}</span>}
           </p>
         </div>
         <div className="flex items-center text-sm text-muted-foreground mt-2">
@@ -130,5 +130,3 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
     </Card>
   )
 }
-
-    
