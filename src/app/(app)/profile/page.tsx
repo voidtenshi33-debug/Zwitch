@@ -101,7 +101,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center justify-center gap-1 font-semibold text-yellow-500 md:justify-start">
                 <Star className="h-4 w-4 fill-current" />
-                <span>{userProfile.avgRating} Average Rating</span>
+                <span>{userProfile.avgRating?.toFixed(1) || '0.0'} Average Rating</span>
               </div>
             </div>
             <div className="flex gap-2">
@@ -125,7 +125,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Items Recycled</p>
-                <p className="text-2xl font-bold">{userProfile.itemsRecycled}</p>
+                <p className="text-2xl font-bold">{userProfile.itemsRecycled || 0}</p>
               </div>
             </div>
           </div>
