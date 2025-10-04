@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const loggedInUser = {
       name: userProfile?.displayName || user?.displayName || "Anonymous",
-      avatarUrl: userProfile?.photoURL || user?.photoURL || "",
+      avatarUrl: userProfile?.photoURL || user?.photoURL || undefined,
       rating: userProfile?.avgRating || 0
   }
 
