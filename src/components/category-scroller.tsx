@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -25,13 +26,13 @@ export function CategoryScroller({ activeCategory, onCategoryChange }: CategoryS
               <Button
                 variant={isActive ? "default" : "secondary"}
                 className={cn(
-                  "flex h-auto flex-col items-center justify-center gap-2 rounded-2xl p-3 transition-all duration-200 w-24 h-24 hover:shadow-lg",
+                  "flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-2xl p-2 text-center transition-all duration-200 hover:shadow-lg",
                   isActive && "bg-primary text-primary-foreground"
                 )}
                 onClick={() => onCategoryChange(category.name)}
               >
                   {category.id !== 0 && <category.icon className="h-8 w-8" />}
-                  <span className="text-xs font-medium">{category.name}</span>
+                  <span className="text-xs font-medium leading-tight">{category.name}</span>
               </Button>
             </div>
           );
