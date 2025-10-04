@@ -17,12 +17,10 @@ import type { Category } from '@/lib/categories';
 
 interface FilterPillsProps {
   sortOptions: { value: string; label: string }[];
-  categories: Category[];
 }
 
-export function FilterPills({ sortOptions, categories }: FilterPillsProps) {
+export function FilterPills({ sortOptions }: FilterPillsProps) {
   const [activeSort, setActiveSort] = useState(sortOptions[0].value);
-  const [activeCategory, setActiveCategory] = useState('all');
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
@@ -45,27 +43,6 @@ export function FilterPills({ sortOptions, categories }: FilterPillsProps) {
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <div className="h-6 border-l border-muted-foreground/20" />
-
-      <Button
-        variant={activeCategory === 'all' ? 'default' : 'outline'}
-        className="rounded-full flex-shrink-0"
-        onClick={() => setActiveCategory('all')}
-      >
-        All
-      </Button>
-
-      {categories.map(category => (
-        <Button
-          key={category.slug}
-          variant={activeCategory === category.slug ? 'default' : 'outline'}
-          className="rounded-full flex-shrink-0"
-          onClick={() => setActiveCategory(category.slug)}
-        >
-          {category.name}
-        </Button>
-      ))}
     </div>
   );
 }

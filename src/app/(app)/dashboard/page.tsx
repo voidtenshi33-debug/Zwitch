@@ -11,7 +11,6 @@ import {
 import { ItemCard } from "@/components/item-card"
 import { items as allItems } from "@/lib/data"
 import { CategoryScroller } from "@/components/category-scroller"
-import { categories } from "@/lib/categories"
 import { FilterPills } from '@/components/filter-pills';
 
 export default function DashboardPage({ selectedLocality }: { selectedLocality: string }) {
@@ -35,7 +34,7 @@ export default function DashboardPage({ selectedLocality }: { selectedLocality: 
       
       <div className='space-y-4'>
         <CategoryScroller />
-        <FilterPills sortOptions={sortOptions} categories={categories} />
+        <FilterPills sortOptions={sortOptions} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
