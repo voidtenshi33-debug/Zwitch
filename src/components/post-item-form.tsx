@@ -28,8 +28,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
-import { generateListingTitle } from "@/ai/flows/generate-listing-title"
-import { suggestItemCategories } from "@/ai/flows/suggest-item-categories"
+import { generateListingDescription } from "@/ai/flows/generate-listing-description"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
 
@@ -71,9 +70,7 @@ const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'N
 
 export function PostItemForm() {
   const { toast } = useToast()
-  const [isTitleGenerating, setIsTitleGenerating] = React.useState(false)
-  const [isCategoryGenerating, setIsCategoryGenerating] = React.useState(false)
-  const [suggestedCategories, setSuggestedCategories] = React.useState<string[]>([])
+  const [isDescriptionGenerating, setIsDescriptionGenerating] = React.useState(false)
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -132,59 +129,33 @@ export function PostItemForm() {
     });
   };
 
-  const handleGenerateTitle = async () => {
-    const description = form.getValues("description")
-    if (!description || description.length < 20) {
-      toast({ variant: "destructive", title: "Please write a longer description first." })
-      return
+  const handleGenerateDescription = async () => {
+    const title = form.getValues("title");
+    const category = form.getValues("category");
+    if (!title || title.length < 5) {
+      toast({ variant: "destructive", title: "Please enter a title first." });
+      return;
     }
-    setIsTitleGenerating(true)
+    if (!category) {
+        toast({ variant: "destructive", title: "Please select a category first." });
+        return;
+    }
+    setIsDescriptionGenerating(true);
     try {
         const images = form.getValues("images");
         let photoDataUri;
         if (images.length > 0) {
             photoDataUri = await fileToDataUri(images[0]);
         }
-        const result = await generateListingTitle({ description, photoDataUri })
-        form.setValue("title", result.title, { shouldValidate: true })
-    } catch (error) {
-        console.error(error)
-        toast({ variant: "destructive", title: "Error", description: "Could not generate a title." })
-    } finally {
-        setIsTitleGenerating(false)
-    }
-  }
-  
-  const handleSuggestCategories = async () => {
-    const description = form.getValues("description")
-    if (!description || description.length < 20) {
-        toast({ variant: "destructive", title: "Please write a longer description first." })
-        return
-    }
-    setIsCategoryGenerating(true)
-    setSuggestedCategories([])
-    try {
-        const images = form.getValues("images");
-        let photoDataUri;
-        if (images.length > 0) {
-            photoDataUri = await fileToDataUri(images[0]);
-        }
-        const result = await suggestItemCategories({ description, photoDataUri });
-        setSuggestedCategories(result.suggestedCategories);
-        if (result.suggestedCategories.length > 0) {
-            // Find a matching category from our predefined list
-            const matchedCategory = categories.find(cat => result.suggestedCategories.includes(cat.name));
-            if (matchedCategory) {
-              form.setValue("category", matchedCategory.name, { shouldValidate: true });
-            }
-        }
+        const result = await generateListingDescription({ title, category, photoDataUri });
+        form.setValue("description", result.description, { shouldValidate: true });
     } catch (error) {
         console.error(error);
-        toast({ variant: "destructive", title: "Error", description: "Could not suggest categories." });
+        toast({ variant: "destructive", title: "Error", description: "Could not generate a description." });
     } finally {
-        setIsCategoryGenerating(false)
+        setIsDescriptionGenerating(false);
     }
-  }
+  };
 
 
   return (
@@ -222,33 +193,6 @@ export function PostItemForm() {
         
         <FormField
           control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} />
-              </FormControl>
-              <FormDescription>
-                The more details you provide, the better the AI suggestions will be.
-              </FormDescription>
-              <FormMessage />
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleGenerateTitle} disabled={isTitleGenerating}>
-                  {isTitleGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Generate Title
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={handleSuggestCategories} disabled={isCategoryGenerating}>
-                  {isCategoryGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Suggest Category
-                </Button>
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="title"
           render={({ field }) => (
             <FormItem>
@@ -274,16 +218,33 @@ export function PostItemForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {suggestedCategories.length > 0 && (
-                        <>
-                        {suggestedCategories.map(cat => <SelectItem key={`s-${cat}`} value={cat}>{cat}</SelectItem>)}
-                        <hr className="my-1"/>
-                        </>
-                    )}
                     {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} />
+              </FormControl>
+              <FormDescription>
+                Provide a title and category, and let AI help you write a great description.
+              </FormDescription>
+              <FormMessage />
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating}>
+                  {isDescriptionGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Generate Description
+                </Button>
+              </div>
             </FormItem>
           )}
         />
