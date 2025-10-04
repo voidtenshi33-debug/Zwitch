@@ -31,8 +31,22 @@ import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
 import { generateListingTitle } from "@/ai/flows/generate-listing-title"
 import { suggestItemCategories } from "@/ai/flows/suggest-item-categories"
 import { categories } from "@/lib/categories"
-import { popularLocations } from "@/lib/data"
 import type { ItemCondition, ListingType } from "@/lib/types"
+
+const popularLocations = [
+    'Kothrud',
+    'Viman Nagar',
+    'Koregaon Park',
+    'Deccan Gymkhana',
+    'Pimpri-Chinchwad',
+    'Hadapsar',
+    'Hinjawadi',
+    'Aundh',
+    'Baner',
+    'Wakad',
+    'Kharadi',
+    'Camp',
+];
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
@@ -53,7 +67,7 @@ const formSchema = z.object({
     path: ["price"],
 });
 
-const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'Needs Minor Repair', 'For Spare Parts'];
+const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'Needs Minor Repair', 'For Spare Parts', 'Working', 'For Parts Only'];
 
 export function PostItemForm() {
   const { toast } = useToast()
@@ -385,5 +399,3 @@ export function PostItemForm() {
     </Form>
   )
 }
-
-    

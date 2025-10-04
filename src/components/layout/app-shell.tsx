@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
-import { notifications, popularLocations } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -39,6 +38,20 @@ function getInitials(name: string | null | undefined) {
   return initials.toUpperCase();
 }
 
+const popularLocations = [
+    'Kothrud',
+    'Viman Nagar',
+    'Koregaon Park',
+    'Deccan Gymkhana',
+    'Pimpri-Chinchwad',
+    'Hadapsar',
+    'Hinjawadi',
+    'Aundh',
+    'Baner',
+    'Wakad',
+    'Kharadi',
+    'Camp',
+];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -73,14 +86,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    if (isProfileLoading) return;
-    
-    if (userProfile?.lastKnownLocality) {
-      setCurrentLocality(userProfile.lastKnownLocality);
-    } else {
-      setCurrentLocality('Kothrud'); // Set default if not in profile
+    if (userProfile) {
+      setCurrentLocality(userProfile.lastKnownLocality || 'Kothrud');
     }
-  }, [userProfile, isProfileLoading]);
+  }, [userProfile]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -182,7 +191,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       avatarUrl: user?.photoURL || "",
   }
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || isProfileLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div>Loading...</div>
@@ -191,7 +200,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
   
   const childrenWithProps = React.Children.map(children, child => {
-    if (React.isValidElement(child) && child.type === require('@/app/(app)/dashboard/page').default) {
+    // @ts-ignore
+    if (React.isValidElement(child) && child.type.name === 'DashboardPage') {
       // @ts-ignore
       return React.cloneElement(child, { selectedLocality: currentLocality });
     }
@@ -300,30 +310,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="relative rounded-full">
                 <Bell className="h-4 w-4" />
-                {notifications.filter(n => !n.isRead).length > 0 && 
-                  <span className="absolute top-0 right-0 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                  </span>
-                }
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {notifications.slice(0, 4).map(n => (
-                <DropdownMenuItem key={n.id} asChild>
-                  <Link href={n.href} className="flex items-start gap-2 whitespace-normal">
-                    <div className="flex-1">
-                      <p className={cn("text-sm", !n.isRead && "font-semibold")}>{n.text}</p>
-                      <p className="text-xs text-muted-foreground">{n.timestamp}</p>
-                    </div>
-                    {!n.isRead && <div className="mt-1 h-2 w-2 rounded-full bg-primary" />}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-               <DropdownMenuSeparator />
-               <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild>
                   <Link href="/notifications" className="text-center justify-center">View All Notifications</Link>
                </DropdownMenuItem>
             </DropdownMenuContent>

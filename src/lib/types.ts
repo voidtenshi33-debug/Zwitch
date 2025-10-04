@@ -1,19 +1,20 @@
-import type { ImagePlaceholder } from './placeholder-images';
+import type { Timestamp } from 'firebase/firestore';
 
 export type User = {
   id: string;
   displayName: string | null;
   photoURL: string | null;
   email: string | null;
-  createdAt: string;
-  joinDate: string;
-  avgRating: number;
-  itemsRecycled: number;
+  createdAt: Timestamp | string;
+  joinDate?: string;
+  avgRating?: number;
+  itemsRecycled?: number;
   lastKnownLocality: string;
 };
 
-export type ItemCondition = 'New' | 'Used - Like New' | 'Used - Good' | 'Needs Minor Repair' | 'For Spare Parts';
+export type ItemCondition = 'New' | 'Used - Like New' | 'Used - Good' | 'Needs Minor Repair' | 'For Spare Parts' | 'Working' | 'For Parts Only';
 export type ListingType = 'Sell' | 'Donate' | 'Spare Parts';
+export type ItemStatus = 'Available' | 'Sold' | 'Recycled';
 
 export type Item = {
   id: string;
@@ -23,23 +24,21 @@ export type Item = {
   category: string;
   condition: ItemCondition;
   listingType: ListingType;
-  image: ImagePlaceholder;
-  seller: {
-      id: string;
-      name: string;
-      avatarUrl: string;
-      avgRating: number;
-  };
-  postedAt: string;
-  location: string;
+  imageUrls: string[];
   locality: string;
-  isFeatured?: boolean;
-  isVerified?: boolean;
+  ownerId: string;
+  ownerName: string;
+  ownerAvatarUrl: string | null;
+  ownerRating: number;
+  status: ItemStatus;
+  isFeatured: boolean;
+  postedAt: Timestamp | string; // Can be a timestamp or a string like "2 days ago"
 };
+
 
 export type Chat = {
     id: string;
-    item: Pick<Item, 'id' | 'title' | 'image' | 'price' | 'listingType'>;
+    item: Pick<Item, 'id' | 'title' | 'imageUrls' | 'price' | 'listingType'>;
     user: {
         id: string;
         name: string;

@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Search, Send, Paperclip, Check, CheckCheck } from "lucide-react"
+import { Send, Paperclip, CheckCheck } from "lucide-react"
 
 import {
   Avatar,
@@ -10,12 +10,45 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { chats, messages as mockMessages, loggedInUser } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
+// This would be replaced with real data fetching
+const mockChatPageData = {
+  chats: [
+    {
+      id: 'chat-1',
+      user: { name: 'Anjali Sharma', avatarUrl: 'https://i.pravatar.cc/150?u=anjali' },
+      item: { id: 'item-2', title: 'Apple iPhone X - For Donation' },
+      lastMessage: 'Is this still available?',
+      unreadCount: 1,
+    },
+    {
+      id: 'chat-2',
+      user: { name: 'Vikram Singh', avatarUrl: 'https://i.pravatar.cc/150?u=vikram' },
+      item: { id: 'item-3', title: 'Logitech Mechanical Gaming Keyboard' },
+      lastMessage: "Great, I can pick it up tomorrow.",
+      unreadCount: 0,
+    }
+  ],
+  activeChat: {
+    item: {
+      id: 'item-2',
+      title: 'Apple iPhone X - For Donation',
+      imageUrls: ['https://images.unsplash.com/photo-1592286928828-5f9b4421b92d'],
+      listingType: 'Donate',
+      price: 0,
+    },
+    user: { name: 'Anjali Sharma', avatarUrl: 'https://i.pravatar.cc/150?u=anjali' }
+  },
+  messages: [
+     { id: 'msg-1', sender: { name: 'Anjali Sharma', avatarUrl: 'https://i.pravatar.cc/150?u=anjali' }, text: "Hi! I'm interested in the iPhone. Is it still available?", timestamp: "12m ago", read: true },
+    { id: 'msg-2', sender: 'me', text: "Hey! Yes, it is.", timestamp: "11m ago", read: true },
+    { id: 'msg-3', sender: { name: 'Anjali Sharma', avatarUrl: 'https://i.pravatar.cc/150?u=anjali' }, text: "Great. Where can I pick it up?", timestamp: "10m ago", read: false },
+  ]
+}
+
 export default function ChatPage() {
-  const activeChat = chats[0];
-  const messages = mockMessages;
+  const { chats, activeChat, messages } = mockChatPageData;
 
   return (
     <div className="grid h-[calc(100vh-theme(spacing.16))] w-full grid-cols-[260px_1fr] rounded-lg border">
@@ -72,7 +105,7 @@ export default function ChatPage() {
         <div className="border-b bg-background/95 p-4 backdrop-blur-sm">
             <div className="flex items-center gap-4">
                 <div className="relative h-16 w-16 flex-shrink-0">
-                    <Image src={activeChat.item.image.imageUrl} alt={activeChat.item.title} fill className="rounded-md object-cover" />
+                    <Image src={activeChat.item.imageUrls[0]} alt={activeChat.item.title} fill className="rounded-md object-cover" />
                 </div>
                 <div className="flex-1">
                     <p className="font-semibold leading-snug">{activeChat.item.title}</p>

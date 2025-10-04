@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import { notifications as allNotifications, loggedInUser } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Bell, MessageSquare, BadgeCheck, ShieldAlert } from 'lucide-react';
 
@@ -11,6 +9,15 @@ const notificationIcons = {
   recycle: BadgeCheck,
   admin: ShieldAlert,
 };
+
+// This would be replaced with real data from Firestore
+const allNotifications = [
+    { id: 'notif-1', type: 'chat', text: "Anjali Sharma sent you a new message.", timestamp: "10m ago", isRead: false, href: '/chat' },
+    { id: 'notif-2', type: 'status', text: "Your item 'Logitech Mechanical Gaming Keyboard' was successfully listed.", timestamp: "1h ago", isRead: true, href: '#' },
+    { id: 'notif-3', type: 'recycle', text: "Anjali Sharma marked 'iPhone X' as recycled. Please leave a rating!", timestamp: "3h ago", isRead: false, href: '#' },
+    { id: 'notif-4', type: 'admin', text: "Welcome to Zwitch! Check out our guide to get started.", timestamp: "1d ago", isRead: true, href: '#' },
+];
+
 
 export default function NotificationsPage() {
   return (

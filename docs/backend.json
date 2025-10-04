@@ -8,19 +8,28 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user.  This is the Firebase Authentication UID."
+          "description": "Unique identifier for the user. This is the Firebase Authentication UID."
         },
         "displayName": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "The user's full name."
         },
         "photoURL": {
-          "type": ["string", "null"],
-          "description": "URL of the user's profile picture.  Can be null if not set.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "URL of the user's profile picture. Can be null if not set.",
           "format": "uri"
         },
         "email": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "The user's email address.",
           "format": "email"
         },
@@ -40,10 +49,103 @@
         "itemsRecycled": {
           "type": "number",
           "description": "The total number of items the user has recycled through the platform."
+        },
+        "lastKnownLocality": {
+          "type": "string",
+          "description": "The last known locality of the user."
         }
       },
       "required": [
         "id",
+        "createdAt"
+      ]
+    },
+    "Item": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Item",
+      "type": "object",
+      "description": "Represents an item listed for sale, donation, or spare parts.",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "listingType": {
+          "type": "string",
+          "enum": [
+            "Sell",
+            "Donate",
+            "Spare Parts"
+          ]
+        },
+        "price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "imageUrls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "locality": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "ownerName": {
+          "type": "string"
+        },
+        "ownerAvatarUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "ownerRating": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Available",
+            "Sold",
+            "Recycled"
+          ]
+        },
+        "isFeatured": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "category",
+        "condition",
+        "listingType",
+        "imageUrls",
+        "locality",
+        "ownerId",
+        "ownerName",
+        "ownerRating",
+        "status",
         "createdAt"
       ]
     }
@@ -68,6 +170,22 @@
             {
               "name": "userId",
               "description": "The Firebase Authentication UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/items/{itemId}",
+        "definition": {
+          "entityName": "Item",
+          "schema": {
+            "$ref": "#/backend/entities/Item"
+          },
+          "description": "Stores all item listings.",
+          "params": [
+            {
+              "name": "itemId",
+              "description": "The unique identifier for the item."
             }
           ]
         }
