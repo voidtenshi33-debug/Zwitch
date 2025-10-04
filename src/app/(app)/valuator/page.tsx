@@ -1,8 +1,10 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useForm, zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { deviceValuator, type DeviceValuatorOutput } from '@/ai/flows/device-valuator-flow';
 
