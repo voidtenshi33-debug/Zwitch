@@ -181,7 +181,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
         {/* Section 6: Action Block (Sticky Footer) */}
         <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur-sm md:static md:border-none md:bg-transparent md:p-0 z-50">
             <div className="container mx-auto max-w-4xl p-4">
-                 {isTrustedSeller ? (
+                 {isTrustedSeller && mockItem.listingType === 'Sell' ? (
                     <div className="grid grid-cols-2 gap-4">
                         <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">Buy Now - ₹{mockItem.price.toLocaleString('en-IN')}</Button>
                         <Button size="lg" variant="outline"><MessageSquare className="mr-2 h-5 w-5"/>Message Seller</Button>
