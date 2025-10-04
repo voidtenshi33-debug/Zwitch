@@ -31,12 +31,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
+import { ImagePlus, Loader2, Sparkles, X, Camera } from "lucide-react"
 import { generateListingDescription } from "@/ai/flows/generate-listing-description"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
 import { useFirestore, useUser } from "@/firebase"
 import { Slider } from "./ui/slider"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { CameraCapture } from '@/components/camera-capture';
 
 const popularLocations = [
     'Kothrud',
@@ -61,7 +63,7 @@ const formSchema = z.object({
   listingType: z.enum(["Sell", "Donate", "Spare Parts"]),
   price: z.number().optional(),
   locality: z.string().min(1, "Please select your locality."),
-  images: z.array(z.instanceof(File)).min(1, "Please upload at least one image."),
+  images: z.array(z.instanceof(File)).min(1, "Please upload at least one image.").max(5, "You can upload a maximum of 5 images."),
 }).refine(data => {
     if (data.listingType === "Sell") {
         return data.price !== undefined && data.price > 0;
@@ -83,6 +85,7 @@ export function PostItemForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isDescriptionGenerating, setIsDescriptionGenerating] = React.useState(false)
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -184,18 +187,22 @@ export function PostItemForm() {
         setIsSubmitting(false);
     }
   }
+  
+  const addImages = (files: File[]) => {
+    const currentImageCount = imagePreviews.length;
+    if (currentImageCount + files.length > 5) {
+        toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 5 images.' });
+        return;
+    }
+    form.setValue("images", [...form.getValues("images"), ...files]);
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
         const files = Array.from(e.target.files);
-        const currentImageCount = imagePreviews.length;
-        if (currentImageCount + files.length > 5) {
-            toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 5 images.' });
-            return;
-        }
-        form.setValue("images", [...form.getValues("images"), ...files]);
-        const newPreviews = files.map(file => URL.createObjectURL(file));
-        setImagePreviews(prev => [...prev, ...newPreviews]);
+        addImages(files);
     }
   };
 
@@ -249,6 +256,7 @@ export function PostItemForm() {
   };
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
@@ -268,11 +276,17 @@ export function PostItemForm() {
                       </div>
                   ))}
                   {imagePreviews.length < 5 && (
-                    <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
-                        <ImagePlus className="h-8 w-8" />
-                        <span className="mt-2 text-xs text-center">Add Image</span>
-                        <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isSubmitting} />
-                    </label>
+                    <>
+                      <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                          <ImagePlus className="h-8 w-8" />
+                          <span className="mt-2 text-xs text-center">From Gallery</span>
+                          <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isSubmitting} />
+                      </label>
+                      <button type="button" onClick={() => setIsCameraOpen(true)} className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                          <Camera className="h-8 w-8" />
+                          <span className="mt-2 text-xs text-center">Use Camera</span>
+                      </button>
+                    </>
                   )}
                 </div>
               </FormControl>
@@ -479,5 +493,24 @@ export function PostItemForm() {
         </Button>
       </form>
     </Form>
+    <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Capture Device Photo</DialogTitle>
+          <DialogDescription>
+            Center your device in the frame and take a clear picture.
+          </DialogDescription>
+        </DialogHeader>
+        <CameraCapture
+          onCapture={(file) => {
+            addImages([file]);
+            setIsCameraOpen(false);
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
+
+    
