@@ -63,7 +63,7 @@ export function ItemCard({ item }: ItemCardProps) {
                 <Link href="#" className="hover:underline">{item.title}</Link>
             </p>
             {item.listingType === "Sell" && item.price ? (
-                <p className="font-headline text-xl font-bold text-foreground">₹{item.price.toLocaleString()}</p>
+                <p className="font-headline text-xl font-bold text-foreground">₹{item.price.toLocaleString('en-IN')}</p>
             ) : (
                 <Badge variant="secondary" className="text-base font-semibold">{item.listingType}</Badge>
             )}

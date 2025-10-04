@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Timestamp } from 'firebase/firestore';
 import { useState } from "react";
 
+// Using mock data for now. This will be replaced with Firestore data.
 const mockWishlistedItems: Item[] = [
   {
     id: "item-1",
@@ -27,34 +28,34 @@ const mockWishlistedItems: Item[] = [
     ownerRating: 4.8,
     status: "Available",
     isFeatured: false,
-    postedAt: new Timestamp(1672531200, 0),
+    postedAt: Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
   },
   {
     id: "item-2",
     title: "Sony Noise-Cancelling Headphones",
-    description: "Excellent sound quality and noise cancellation. Perfect for travel or focused work. Comes with carrying case.",
+    description: "WH-1000XM4 model. Excellent condition, comes with the original case. The sound quality is amazing.",
     category: "Audio Devices",
     condition: "Used - Like New",
     listingType: "Sell",
     price: 8000,
-    imageUrls: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e"],
+    imageUrls: ["https://images.unsplash.com/photo-1546435770-a3e426bf40B1"],
     locality: "Baner",
-    ownerId: "user_01",
-    ownerName: "Rohan Kumar",
-    ownerAvatarUrl: "https://i.pravatar.cc/150?u=rohan",
-    ownerRating: 4.8,
+    ownerId: "user_02",
+    ownerName: "Anjali Sharma",
+    ownerAvatarUrl: "https://i.pravatar.cc/150?u=anjali",
+    ownerRating: 4.9,
     status: "Available",
     isFeatured: true,
-    postedAt: new Timestamp(1672617600, 0),
+    postedAt: Timestamp.fromMillis(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
   },
 ];
 
 
 export default function WishlistPage() {
   const { user } = useUser();
-  // Using mock data for now.
+  // Using mock data for now. In a real implementation, you'd fetch this based on user.wishlist
   const [wishlistedItems, setWishlistedItems] = useState(mockWishlistedItems);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Set to true when fetching data
 
 
   return (

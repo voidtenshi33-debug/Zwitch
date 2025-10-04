@@ -10,6 +10,7 @@ export type User = {
   avgRating?: number;
   itemsRecycled?: number;
   lastKnownLocality: string;
+  wishlist?: string[];
 };
 
 export type ItemCondition = 'New' | 'Used - Like New' | 'Used - Good' | 'Needs Minor Repair' | 'For Spare Parts' | 'Working' | 'For Parts Only';

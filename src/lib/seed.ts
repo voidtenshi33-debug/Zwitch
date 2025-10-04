@@ -1,4 +1,3 @@
-
 // IMPORTANT: This file is used to seed the database with sample data.
 // It is designed to run only once.
 
@@ -11,6 +10,22 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 const db = getFirestore(app);
 
 const sampleItems = [
+    {
+      title: "Sony Noise-Cancelling Headphones",
+      description: "WH-1000XM4 model. Excellent condition, comes with the original case. The sound quality is amazing.",
+      category: "Audio Devices",
+      condition: "Used - Like New",
+      listingType: "Sell",
+      price: 8000,
+      imageUrls: ["https://images.unsplash.com/photo-1546435770-a3e426bf40B1"],
+      locality: "Baner",
+      ownerId: "user_02",
+      ownerName: "Anjali Sharma",
+      ownerAvatarUrl: "https://i.pravatar.cc/150?u=anjali",
+      ownerRating: 4.9,
+      status: "Available",
+      isFeatured: true,
+    },
     {
       title: "Dell XPS 13 Laptop (2020 Model)",
       description: "Good condition, works perfectly for coding and daily use. Has a few minor scratches on the lid. Comes with original charger.",
@@ -90,22 +105,6 @@ const sampleItems = [
       ownerRating: 4.8,
       status: "Available",
       isFeatured: false,
-    },
-    {
-      title: "Sony Noise-Cancelling Headphones",
-      description: "Excellent sound quality and noise cancellation. Perfect for travel or focused work. Comes with carrying case.",
-      category: "Audio Devices",
-      condition: "Used - Like New",
-      listingType: "Sell",
-      price: 8000,
-      imageUrls: ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e"],
-      locality: "Baner",
-      ownerId: "user_01",
-      ownerName: "Rohan Kumar",
-      ownerAvatarUrl: "https://i.pravatar.cc/150?u=rohan",
-      ownerRating: 4.8,
-      status: "Available",
-      isFeatured: true,
     },
     {
         title: "Corsair Vengeance RAM 16GB",

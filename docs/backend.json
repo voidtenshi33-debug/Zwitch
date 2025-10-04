@@ -65,6 +65,13 @@
         "lastKnownLocality": {
           "type": "string",
           "description": "The last known locality of the user."
+        },
+        "wishlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of item IDs that the user has added to their wishlist."
         }
       },
       "required": [
