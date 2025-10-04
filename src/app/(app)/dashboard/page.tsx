@@ -211,7 +211,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
       {/* Hero Section */}
       <div className="relative aspect-[2/1] md:aspect-[3/1] w-full overflow-hidden rounded-xl bg-secondary">
           <Image
-              src="https://images.unsplash.com/photo-1598257006624-98c4e36480a6?q=80&w=2070&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1611270418597-a6c7717b1b98?q=80&w=2070&auto=format&fit=crop"
               alt="E-waste recycling"
               fill
               className="object-cover"
@@ -294,5 +294,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
     </div>
   )
 }
+
+    
 
     
