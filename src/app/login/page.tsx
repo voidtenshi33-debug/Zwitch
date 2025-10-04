@@ -61,6 +61,11 @@ export default function LoginPage() {
 
       router.push('/dashboard');
     } catch (error: any) {
+      if (error.code === 'auth/cancelled-popup-request') {
+        // User closed the popup, do nothing.
+        console.log('Google Sign-In cancelled by user.');
+        return;
+      }
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
