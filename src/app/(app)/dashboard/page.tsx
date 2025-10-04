@@ -253,7 +253,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
         </div>
       ) : (
         <>
-          {featuredItems && featuredItems.length > 0 && (
+          {featuredItems && featuredItems.length > 0 && activeCategory === 'all' && searchText.length < 3 && (
             <ItemCarousel 
               title="Featured Items" 
               items={featuredItems} 
@@ -263,7 +263,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
             />
           )}
 
-          {donationItems && donationItems.length > 0 && (
+          {donationItems && donationItems.length > 0 && activeCategory === 'all' && searchText.length < 3 && (
             <ItemCarousel 
               title="Donations Corner"
               items={donationItems}
@@ -285,7 +285,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
                 <EmptyState
                     icon={Package}
                     title="No Listings Found"
-                    description={`There are currently no listings matching your criteria in ${selectedLocality}. Try another category or search term!`}
+                    description={`There are currently no listings matching your criteria. Try another category or search term!`}
                 />
             )}
           </div>
@@ -294,3 +294,5 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     </div>
   )
 }
+
+    
