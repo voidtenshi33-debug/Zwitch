@@ -47,24 +47,6 @@ const mockWishlistedItems: Item[] = [
     isFeatured: true,
     postedAt: new Timestamp(1672617600, 0),
   },
-  {
-    id: "item-3",
-    title: "Logitech Mechanical Gaming Keyboard",
-    description: "RGB backlit mechanical keyboard. All keys and lights working perfectly. Great for gaming and typing.",
-    category: "Keyboards & Mice",
-    condition: "Used - Like New",
-    listingType: "Sell",
-    price: 2500,
-    imageUrls: ["https://images.unsplash.com/photo-1618384887924-2f80214156b2"],
-    locality: "Hadapsar",
-    ownerId: "user_03",
-    ownerName: "Vikram Singh",
-    ownerAvatarUrl: null,
-    ownerRating: 4.5,
-    status: "Available",
-    isFeatured: false,
-    postedAt: new Timestamp(1672704000, 0),
-  },
 ];
 
 
