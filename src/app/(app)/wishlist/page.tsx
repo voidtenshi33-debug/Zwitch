@@ -7,7 +7,7 @@ import { Heart } from "lucide-react"
 import { useUser } from "@/firebase";
 import type { Item } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { useState } from "react";
 
 const mockWishlistedItems: Item[] = [
@@ -27,7 +27,7 @@ const mockWishlistedItems: Item[] = [
     ownerRating: 4.8,
     status: "Available",
     isFeatured: false,
-    postedAt: { seconds: 1672531200, nanoseconds: 0 } as Timestamp,
+    postedAt: new Timestamp(1672531200, 0),
   },
   {
     id: "item-2",
@@ -45,7 +45,7 @@ const mockWishlistedItems: Item[] = [
     ownerRating: 4.8,
     status: "Available",
     isFeatured: true,
-    postedAt: { seconds: 1672531200, nanoseconds: 0 } as Timestamp,
+    postedAt: new Timestamp(1672617600, 0),
   },
   {
     id: "item-3",
@@ -63,7 +63,7 @@ const mockWishlistedItems: Item[] = [
     ownerRating: 4.5,
     status: "Available",
     isFeatured: false,
-    postedAt: { seconds: 1672531200, nanoseconds: 0 } as Timestamp,
+    postedAt: new Timestamp(1672704000, 0),
   },
 ];
 
