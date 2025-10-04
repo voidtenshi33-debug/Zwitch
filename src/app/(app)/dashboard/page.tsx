@@ -80,25 +80,26 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
   const recommendationsQuery = useMemoFirebase(() => {
     if (!firestore || !selectedLocality) return null;
 
-    let q = collection(firestore, "items");
-    let queries: any[] = [where("locality", "==", selectedLocality)];
+    const baseCollection = collection(firestore, 'items');
+    const queryConstraints = [where('locality', '==', selectedLocality)];
 
-    if (effectiveSearchText) {
-        const capitalizedSearchText = effectiveSearchText.charAt(0).toUpperCase() + effectiveSearchText.slice(1);
-        queries.push(
-            orderBy("title"),
-            startAt(capitalizedSearchText),
-            endAt(capitalizedSearchText + '\uf8ff')
-        );
-    } else {
-        queries.push(orderBy("postedAt", "desc"));
+    // Category filter
+    if (activeCategory !== 'all') {
+      queryConstraints.push(where('category', '==', activeCategory));
     }
 
-    if (activeCategory !== 'all') {
-      queries.push(where("category", "==", activeCategory));
+    // Search text filter
+    if (effectiveSearchText) {
+      const capitalizedSearchText = effectiveSearchText.charAt(0).toUpperCase() + effectiveSearchText.slice(1);
+      queryConstraints.push(orderBy('title'));
+      queryConstraints.push(startAt(capitalizedSearchText));
+      queryConstraints.push(endAt(capitalizedSearchText + '\uf8ff'));
+    } else {
+      // Default sort order when not searching
+      queryConstraints.push(orderBy('postedAt', 'desc'));
     }
     
-    return query(q, ...queries);
+    return query(baseCollection, ...queryConstraints);
 
   }, [firestore, selectedLocality, activeCategory, effectiveSearchText]);
 
@@ -107,8 +108,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
   const { data: recommendedItems, isLoading: areRecommendationsLoading } = useCollection<Item>(recommendationsQuery);
 
 
-  const handleCategoryChange = (categorySlug: string) => {
-    const categoryName = categorySlug === 'all' ? 'all' : categorySlug;
+  const handleCategoryChange = (categoryName: string) => {
     setActiveCategory(categoryName);
   };
 
@@ -200,3 +200,5 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     </div>
   )
 }
+
+    
