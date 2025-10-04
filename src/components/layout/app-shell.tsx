@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Bell, Home, Heart, MessageSquare, PlusSquare, User, Menu, Search, LogOut, Settings, PanelLeft, X
+  Bell, Home, Heart, MessageSquare, PlusSquare, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { notifications } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Home' },
@@ -42,6 +43,49 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+
+  const [searchText, setSearchText] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchText(transcript);
+        // Automatically perform the search with the transcript
+        performSearch(transcript);
+      };
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const handleListen = () => {
+    if (recognitionRef.current && !isListening) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error("Speech recognition error:", error);
+        // Handle cases where recognition is already active or other errors
+        setIsListening(false);
+      }
+    }
+  };
+
+  const performSearch = (query: string) => {
+    console.log('Searching for:', query);
+    // In a real app, you would navigate to the search results page
+    // router.push(`/search?q=${encodeURIComponent(query)}`);
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -143,14 +187,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Sheet>
 
           <div className="w-full flex-1">
-            <form>
+            <form onSubmit={(e) => { e.preventDefault(); performSearch(searchText); }}>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search products..."
-                  className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
+                  className="w-full appearance-none bg-background pl-8 pr-8 shadow-none md:w-2/3 lg:w-1/3"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
                 />
+                {recognitionRef.current && (
+                   <Button type="button" size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={handleListen}>
+                     <Mic className="h-4 w-4" />
+                   </Button>
+                )}
               </div>
             </form>
           </div>
@@ -216,6 +267,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+       <Dialog open={isListening} onOpenChange={setIsListening}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Listening...</DialogTitle>
+            <DialogDescription className="text-center">
+              Speak your search query now.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-8">
+            <Mic className="h-16 w-16 text-primary animate-pulse" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
