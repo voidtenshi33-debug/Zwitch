@@ -243,12 +243,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
               <nav className="grid gap-2 text-lg font-medium">
-                <Link
-                  href="/dashboard"
-                  className="mb-4 flex items-center gap-2 text-lg font-semibold"
-                >
-                  <Logo isDashboard />
-                </Link>
+                <Logo isDashboard />
                 {navItems.map((item) => (
                   <Link
                     key={item.label}
@@ -354,10 +349,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {childrenWithProps}
         </main>
 
-        <Button asChild className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-accent shadow-lg transition-transform hover:scale-110">
-            <Link href="/post">
-                <Plus className="h-8 w-8" />
-                <span className="sr-only">Post Item</span>
+        <Button asChild size="lg" className="fixed bottom-6 right-6 rounded-full bg-accent shadow-lg transition-transform hover:scale-105 h-auto py-3 px-5">
+            <Link href="/post" className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                <span className="font-semibold">Post</span>
             </Link>
         </Button>
       </div>
