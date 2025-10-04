@@ -296,7 +296,3 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
 }
 
     
-
-    
-
-    
