@@ -2,63 +2,75 @@
  * @fileoverview Firestore Security Rules for Zwitch application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles. Only the authenticated user can create, read, update, or delete their own profile.
+ * This ruleset prioritizes user data ownership and controls access to item listings.
+ * Users can only manage their own profiles and create/modify their own items.
+ * Read access to item listings is public, but modifications are restricted to the owner.
  *
  * Data Structure:
- * User profiles are stored under `/users/{userId}`, where `userId` corresponds to the Firebase Authentication UID.
+ * - /users/{userId}: Stores user profile information, where {userId} matches the Firebase Auth UID.
+ * - /items/{itemId}: Stores item listings. Each item contains an 'ownerId' field indicating the creator.
  *
  * Key Security Decisions:
- * - Users can only manage their own profiles. Listing all users is disallowed to protect privacy.
- * - Data consistency is enforced by validating that the `userId` in the path matches the `id` field in the user document on creation and update.
+ * - Users can only read their profile, but can modify their profile.
+ * - Item listings are publicly readable to facilitate discovery, but write access is owner-only.
+ * - Listing operations are generally public.
  *
  * Denormalization for Authorization:
- * The `userId` is used in the path and is also present as the `id` field within the document. This denormalization allows for efficient ownership checks without additional reads.
- *
- * Structural Segregation:
- * User profiles are stored in a dedicated collection (`/users/{userId}`) separate from other data, providing clear separation of concerns and simplifying security rules.
+ * The 'Item' entity includes an `ownerId` field. This denormalization is CRUCIAL
+ * for the security rules, because it allows rules on `/items/{itemId}` to quickly
+ * verify ownership without needing to perform additional `get()` operations.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages user profiles. Only the authenticated user can manage their own profile.
+     * @description Manages user profiles.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create their profile at /users/user_abc.
-     * @allow (get) - Authenticated user with UID 'user_abc' can read their profile at /users/user_abc.
-     * @allow (update) - Authenticated user with UID 'user_abc' can update their profile at /users/user_abc.
-     * @allow (delete) - Authenticated user with UID 'user_abc' can delete their profile at /users/user_abc.
-     * @deny (create) - Authenticated user with UID 'user_def' cannot create a profile at /users/user_abc.
-     * @deny (get) - Authenticated user with UID 'user_def' cannot read profile from /users/user_abc.
-     * @deny (update) - Authenticated user with UID 'user_def' cannot update the profile at /users/user_abc.
-     * @deny (delete) - Authenticated user with UID 'user_def' cannot delete the profile at /users/user_abc.
-     * @principle Enforces strict user-ownership for all profile operations.
+     * @allow (create) User with matching UID can create their profile.
+     * @allow (get) User can read their own profile.
+     * @allow (update) User can update their own profile.
+     * @allow (delete) User can delete their own profile.
+     * @deny (create) User cannot create a profile with a mismatched UID.
+     * @deny (get) User cannot read another user's profile.
+     * @deny (update) User cannot update another user's profile.
+     * @deny (delete) User cannot delete another user's profile.
+     * @principle Enforces user-ownership of profile data.
      */
     match /users/{userId} {
-      // Helper function to check if the authenticated user is the owner of the profile.
       function isOwner(userId) {
         return request.auth != null && request.auth.uid == userId;
       }
-
-      // Helper function to check if the authenticated user is the owner of the existing profile
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      // Allow a user to get their own profile data.
       allow get: if isOwner(userId);
-
-      // Prevent listing of all user profiles.
       allow list: if false;
-
-      // Allow a user to create their own profile, enforcing the path consistency.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && resource.data.id == userId;
+      allow delete: if isOwner(userId) && resource.data.id == userId;
+    }
 
-      // Allow a user to update their own profile, enforcing the path consistency and ensuring immutability of the id field.
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-
-      // Allow a user to delete their own profile.
-      allow delete: if isExistingOwner(userId);
+    /**
+     * @description Manages item listings.
+     * @path /items/{itemId}
+     * @allow (get, list) Anyone can read item listings.
+     * @allow (create) User can create an item listing with their UID as the ownerId.
+     * @allow (update) User can update an item listing if they are the owner.
+     * @allow (delete) User can delete an item listing if they are the owner.
+     * @deny (create) User cannot create an item listing with a mismatched ownerId.
+     * @deny (update) User cannot update another user's item listing.
+     * @deny (delete) User cannot delete another user's item listing.
+     * @principle Allows public read access to item listings but restricts write access to the owner.
+     */
+    match /items/{itemId} {
+      function isOwner(ownerId) {
+        return request.auth != null && request.auth.uid == ownerId;
+      }
+       function isExistingOwner(ownerId) {
+        return isOwner(ownerId) && resource != null;
+      }
+      allow get, list: if true;
+      allow create: if isOwner(request.resource.data.ownerId);
+      allow update: if isExistingOwner(resource.data.ownerId);
+      allow delete: if isExistingOwner(resource.data.ownerId);
     }
   }
 }
