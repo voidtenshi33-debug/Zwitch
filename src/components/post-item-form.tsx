@@ -140,6 +140,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
     if (valuationData) {
         form.setValue('title', valuationData.suggestedTitle);
         form.setValue('category', valuationData.suggestedCategory);
+        form.setValue('description', valuationData.suggestedDescription);
         form.setValue('images', valuationData.images);
         
         const previews = valuationData.images.map(file => URL.createObjectURL(file));
@@ -191,6 +192,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
 
           form.setValue('title', result.suggestedTitle, { shouldValidate: true });
           form.setValue('category', result.suggestedCategory, { shouldValidate: true });
+          form.setValue('description', result.suggestedDescription, { shouldValidate: true });
           
           if (form.getValues('listingType') === 'Sell') {
             const min = result.estimatedMinValue;
@@ -467,7 +469,7 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your electronic item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating || isValuating} />
+                <Textarea placeholder="Describe your electronic item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating || isValuating || !!valuationData} />
               </FormControl>
                {!valuationData && (
                 <>

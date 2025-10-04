@@ -26,6 +26,7 @@ const DeviceValuatorOutputSchema = z.object({
   recommendation: z.string().describe('The recommended action for the user (e.g., "High Resale Value! We recommend selling this.").'),
   suggestedTitle: z.string().describe('A suggested title for the listing if the user decides to sell.'),
   suggestedCategory: z.string().describe('The suggested category for the listing.'),
+  suggestedDescription: z.string().describe('A suggested description for the listing based on the condition analyzed from the images.'),
 });
 export type DeviceValuatorOutput = z.infer<typeof DeviceValuatorOutputSchema>;
 
@@ -39,9 +40,10 @@ const prompt = ai.definePrompt({
   output: { schema: DeviceValuatorOutputSchema },
   prompt: `You are an expert evaluator for a second-hand electronics marketplace in India. Your currency is Indian Rupees (INR).
 
-  A user wants to know the value of their old device. Based on the provided images and device details, you must diagnose the item's condition, provide a realistic resale price range, a clear recommendation, a suggested listing title, and a category.
+  A user wants to know the value of their old device. Based on the provided images and device details, you must diagnose the item's condition, provide a realistic resale price range, a clear recommendation, a suggested listing title, a category, and a detailed description.
 
   - Analyze the images to determine the physical condition (e.g., screen cracks, scratches, overall wear).
+  - Write a description that honestly reflects the item's condition based on the visual analysis. Mention any visible damage or positive aspects.
   - If the value is very low based on the visible condition, recommend donating or selling for spare parts.
   - If the value is decent, recommend selling it.
   - The suggested title should be clear and include the model and an inferred condition (e.g., "Used - Good", "Screen Damaged").
