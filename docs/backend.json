@@ -42,6 +42,18 @@
           "type": "number",
           "description": "The average star rating of the user based on feedback from other users."
         },
+        "ratingsCount": {
+            "type": "number",
+            "description": "The total number of ratings a user has received."
+        },
+        "successfulExchanges": {
+            "type": "number",
+            "description": "The total number of successful exchanges (sales or donations)."
+        },
+        "idVerified": {
+            "type": "boolean",
+            "description": "Whether the user has completed identity verification."
+        },
         "joinDate": {
           "type": "string",
           "description": "The date the user joined the platform."
@@ -57,7 +69,10 @@
       },
       "required": [
         "id",
-        "createdAt"
+        "createdAt",
+        "idVerified",
+        "successfulExchanges",
+        "ratingsCount"
       ]
     },
     "Item": {
@@ -123,7 +138,8 @@
           "enum": [
             "Available",
             "Sold",
-            "Recycled"
+            "Recycled",
+            "Paid - Awaiting Handover"
           ]
         },
         "isFeatured": {
@@ -147,6 +163,42 @@
         "ownerRating",
         "status",
         "createdAt"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a transaction when a user clicks 'Buy Now' on an item from a trusted seller.",
+      "properties": {
+          "id": { "type": "string", "description": "The unique ID for the order." },
+          "itemId": { "type": "string", "description": "The ID of the item being purchased." },
+          "buyerId": { "type": "string", "description": "The UID of the user who is buying the item." },
+          "sellerId": { "type": "string", "description": "The UID of the trusted seller." },
+          "price": { "type": "number", "description": "The final price of the item at the time of purchase." },
+          "status": {
+              "type": "string",
+              "enum": [
+                  "Paid - Awaiting Handover",
+                  "Completed - Awaiting Rating",
+                  "Cancelled",
+                  "Completed"
+              ],
+              "description": "The current status of the order transaction."
+          },
+          "paymentGatewayId": { "type": "string", "description": "The transaction ID from the payment gateway (e.g., Razorpay)." },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the order was created." },
+          "completedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the buyer confirmed receipt." }
+      },
+      "required": [
+          "id",
+          "itemId",
+          "buyerId",
+          "sellerId",
+          "price",
+          "status",
+          "paymentGatewayId",
+          "createdAt"
       ]
     }
   },
@@ -189,6 +241,20 @@
             }
           ]
         }
+      },
+      {
+          "path": "/orders/{orderId}",
+          "definition": {
+              "entityName": "Order",
+              "schema": { "$ref": "#/backend/entities/Order" },
+              "description": "Tracks 'Buy Now' transactions, including payment status and handover confirmation.",
+              "params": [
+                  {
+                      "name": "orderId",
+                      "description": "The unique identifier for the order."
+                  }
+              ]
+          }
       }
     ]
   }
