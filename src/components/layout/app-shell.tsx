@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
@@ -8,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import { appWithTranslation } from 'next-i18next';
-import nextI18NextConfig from '../../../../next-i18next.config.js';
+import nextI18NextConfig from '../../../next-i18next.config.js';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -469,3 +470,5 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
 }
 
 export const AppShell = appWithTranslation(AppShellComponent, nextI18NextConfig);
+
+    
