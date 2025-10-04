@@ -67,6 +67,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserType>(userRef);
 
   useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [isUserLoading, user, router]);
+
+  useEffect(() => {
     if (isProfileLoading) return;
     
     if (userProfile?.lastKnownLocality) {
@@ -176,19 +182,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       avatarUrl: user?.photoURL || "",
   }
 
-  if (isUserLoading) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div>Loading...</div>
       </div>
     );
-  }
-
-  if (!user) {
-     if (typeof window !== 'undefined') {
-      router.push('/login');
-    }
-    return null;
   }
   
   const childrenWithProps = React.Children.map(children, child => {
