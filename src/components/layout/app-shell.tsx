@@ -86,10 +86,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [isUserLoading, user, router]);
 
   useEffect(() => {
-    if (userProfile) {
+    if (userProfile && !currentLocality) {
       setCurrentLocality(userProfile.lastKnownLocality || 'Kothrud');
     }
-  }, [userProfile]);
+  }, [userProfile, currentLocality]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -124,7 +124,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const performSearch = (query: string) => {
     console.log('Searching for:', query);
-    // router.push(`/search?q=${encodeURIComponent(query)}`);
+    // The actual search filtering is handled in DashboardPage based on the searchText prop
   };
 
   const handleLogout = async () => {
@@ -191,7 +191,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       avatarUrl: user?.photoURL || "",
   }
 
-  if (isUserLoading || isProfileLoading || !user) {
+  const isLoading = isUserLoading || isProfileLoading || !currentLocality;
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+        router.push('/login');
+    }
+  }, [isLoading, user, router]);
+
+
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div>Loading...</div>
@@ -203,7 +212,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     // @ts-ignore
     if (React.isValidElement(child) && child.type.name === 'DashboardPage') {
       // @ts-ignore
-      return React.cloneElement(child, { selectedLocality: currentLocality });
+      return React.cloneElement(child, { selectedLocality: currentLocality, searchText: searchText });
     }
     return child;
   });

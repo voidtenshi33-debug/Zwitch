@@ -12,32 +12,50 @@ import { ItemCard } from "@/components/item-card"
 import { CategoryScroller } from "@/components/category-scroller"
 import { FilterPills } from '@/components/filter-pills';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, endAt, startAt } from 'firebase/firestore';
 import type { Item } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { Package } from 'lucide-react';
 
-export default function DashboardPage({ selectedLocality }: { selectedLocality?: string }) {
+interface DashboardPageProps {
+  selectedLocality?: string;
+  searchText?: string;
+}
+
+export default function DashboardPage({ selectedLocality, searchText }: DashboardPageProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const firestore = useFirestore();
+  const effectiveSearchText = searchText && searchText.length >= 3 ? searchText : '';
+
 
   const itemsQuery = useMemoFirebase(() => {
     // Defer the query until both firestore and selectedLocality are available.
     if (!firestore || !selectedLocality) return null;
 
-    const baseQuery = query(
+    let q = query(
       collection(firestore, "items"),
-      where("locality", "==", selectedLocality),
-      orderBy("postedAt", "desc")
+      where("locality", "==", selectedLocality)
     );
 
-    if (activeCategory === 'all') {
-      return baseQuery;
-    } else {
-      return query(baseQuery, where("category", "==", activeCategory));
+    if (activeCategory !== 'all') {
+      q = query(q, where("category", "==", activeCategory));
     }
-  }, [firestore, selectedLocality, activeCategory]);
+    
+    if (effectiveSearchText) {
+        const capitalizedSearchText = effectiveSearchText.charAt(0).toUpperCase() + effectiveSearchText.slice(1);
+        q = query(
+            q,
+            orderBy("title"),
+            startAt(capitalizedSearchText),
+            endAt(capitalizedSearchText + '\uf8ff')
+        );
+    } else {
+        q = query(q, orderBy("postedAt", "desc"));
+    }
+
+    return q;
+  }, [firestore, selectedLocality, activeCategory, effectiveSearchText]);
 
   const { data: items, isLoading: areItemsLoading } = useCollection<Item>(itemsQuery);
 
@@ -90,7 +108,7 @@ export default function DashboardPage({ selectedLocality }: { selectedLocality?:
         <EmptyState
             icon={Package}
             title="No Listings Found"
-            description={`There are currently no listings for "${activeCategory}" in ${selectedLocality}. Try another category or location!`}
+            description={`There are currently no listings matching your criteria in ${selectedLocality}. Try another category or search term!`}
         />
       )}
     </>
