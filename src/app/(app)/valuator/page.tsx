@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -14,9 +13,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, Tag, ArrowRight, ImagePlus, X } from 'lucide-react';
+import { Loader2, Sparkles, Tag, ArrowRight, ImagePlus, X, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { CameraCapture } from '@/components/camera-capture';
+
 
 const valuatorFormSchema = z.object({
   deviceType: z.string().min(1, 'Please select a device type.'),
@@ -41,6 +43,7 @@ export default function ValuatorPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const form = useForm<z.infer<typeof valuatorFormSchema>>({
     resolver: zodResolver(valuatorFormSchema),
@@ -86,15 +89,19 @@ export default function ValuatorPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
         const files = Array.from(e.target.files);
-        const currentImageCount = imagePreviews.length;
-        if (currentImageCount + files.length > 3) {
-            toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 3 images.' });
-            return;
-        }
-        form.setValue("images", [...form.getValues("images"), ...files]);
-        const newPreviews = files.map(file => URL.createObjectURL(file));
-        setImagePreviews(prev => [...prev, ...newPreviews]);
+        addImages(files);
     }
+  };
+
+  const addImages = (files: File[]) => {
+    const currentImageCount = imagePreviews.length;
+    if (currentImageCount + files.length > 3) {
+        toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 3 images.' });
+        return;
+    }
+    form.setValue("images", [...form.getValues("images"), ...files]);
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
   };
 
   const removeImage = (index: number) => {
@@ -152,94 +159,118 @@ export default function ValuatorPage() {
   }
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Tag className="h-6 w-6 text-primary" />
-            AI Device Valuator
-        </CardTitle>
-        <CardDescription>
-          Find out what your old, forgotten electronics are worth. Just provide a few details and some photos to get started.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="deviceType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Device Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <>
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl flex items-center gap-2">
+              <Tag className="h-6 w-6 text-primary" />
+              AI Device Valuator
+          </CardTitle>
+          <CardDescription>
+            Find out what your old, forgotten electronics are worth. Just provide a few details and some photos to get started.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="deviceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Device Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="e.g., Mobile Phone" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {deviceTypes.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand and Model</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="e.g., Mobile Phone" />
-                      </SelectTrigger>
+                      <Input placeholder="e.g., Apple iPhone 11" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {deviceTypes.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand and Model</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Apple iPhone 11" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="images"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Condition Photos (up to 3)</FormLabel>
-                  <FormDescription>Upload clear photos of the front, back, and any specific damage.</FormDescription>
-                  <FormControl>
-                    <div className="grid grid-cols-3 gap-4">
-                      {imagePreviews.map((src, index) => (
-                          <div key={index} className="relative aspect-square">
-                              <Image src={src} alt={`Preview ${index+1}`} fill className="rounded-md object-cover" />
-                              <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(index)}>
-                                  <X className="h-4 w-4" />
-                              </Button>
-                          </div>
-                      ))}
-                      {imagePreviews.length < 3 && (
-                        <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
-                            <ImagePlus className="h-8 w-8" />
-                            <span className="mt-2 text-xs text-center">Add Photo</span>
-                            <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isLoading} />
-                        </label>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Get My Valuation
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+              <FormField
+                control={form.control}
+                name="images"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Condition Photos (up to 3)</FormLabel>
+                    <FormDescription>Upload clear photos of the front, back, and any specific damage.</FormDescription>
+                    <FormControl>
+                      <div className="grid grid-cols-3 gap-4">
+                        {imagePreviews.map((src, index) => (
+                            <div key={index} className="relative aspect-square">
+                                <Image src={src} alt={`Preview ${index+1}`} fill className="rounded-md object-cover" />
+                                <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(index)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                        {imagePreviews.length < 3 && (
+                          <>
+                            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                                <ImagePlus className="h-8 w-8" />
+                                <span className="mt-2 text-xs text-center">Add Photo</span>
+                                <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isLoading} />
+                            </label>
+                             <button type="button" onClick={() => setIsCameraOpen(true)} className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                                <Camera className="h-8 w-8" />
+                                <span className="mt-2 text-xs text-center">Use Camera</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Get My Valuation
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Capture Device Photo</DialogTitle>
+            <DialogDescription>
+              Center your device in the frame and take a clear picture.
+            </DialogDescription>
+          </DialogHeader>
+          <CameraCapture
+            onCapture={(file) => {
+              addImages([file]);
+              setIsCameraOpen(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
