@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Bell, Home, Heart, MessageSquare, PlusSquare, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown
+  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,6 @@ import { User as UserType } from '@/lib/types';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Home' },
-  { href: '/post', icon: PlusSquare, label: 'Post Item' },
   { href: '/chat', icon: MessageSquare, label: 'Chats' },
   { href: '/wishlist', icon: Heart, label: 'Wishlist' },
   { href: '/profile', icon: User, label: 'Profile' },
@@ -206,10 +205,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}>
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <Logo className={cn("text-2xl", !isSidebarOpen && "text-primary")} isDashboard as="span" />
-              <span className={cn("font-headline sr-only", isSidebarOpen && "lg:not-sr-only")}></span>
-            </Link>
+            <Logo className={cn("text-2xl", !isSidebarOpen && "text-primary")} isDashboard as="span" />
+            <span className={cn("font-headline sr-only", isSidebarOpen && "lg:not-sr-only")}></span>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               <PanelLeft className={cn("h-4 w-4 transition-transform", !isSidebarOpen && "rotate-180")} />
             </Button>
@@ -356,6 +353,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background overflow-auto">
           {childrenWithProps}
         </main>
+
+        <Button asChild className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-accent shadow-lg transition-transform hover:scale-110">
+            <Link href="/post">
+                <Plus className="h-8 w-8" />
+                <span className="sr-only">Post Item</span>
+            </Link>
+        </Button>
       </div>
 
        <Dialog open={isListening} onOpenChange={setIsListening}>
