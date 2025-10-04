@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Search, Send, Paperclip } from "lucide-react"
+import { Search, Send, Paperclip, Check, CheckCheck } from "lucide-react"
 
 import {
   Avatar,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { chats, messages as mockMessages, loggedInUser } from "@/lib/data"
 import { cn } from "@/lib/utils"
 
@@ -20,7 +21,7 @@ export default function ChatPage() {
     <div className="grid h-[calc(100vh-theme(spacing.16))] w-full grid-cols-[260px_1fr] rounded-lg border">
       <div className="border-r bg-muted/40">
         <div className="flex h-full flex-col gap-2">
-          <div className="flex h-[52px] items-center border-b px-4 lg:h-[60px]">
+          <div className="flex h-[60px] items-center border-b px-4">
             <h2 className="font-headline text-xl font-semibold">Chats</h2>
           </div>
           <div className="flex-1 overflow-auto py-2">
@@ -40,6 +41,7 @@ export default function ChatPage() {
                   </Avatar>
                   <div className="flex-1 overflow-hidden">
                     <p className="truncate font-semibold">{chat.user.name}</p>
+                    <p className="text-xs text-muted-foreground">Re: {chat.item.title}</p>
                     <p className="truncate text-xs">{chat.lastMessage}</p>
                   </div>
                   {chat.unreadCount > 0 && (
@@ -54,16 +56,39 @@ export default function ChatPage() {
         </div>
       </div>
       <div className="flex flex-col">
-        <header className="flex h-[52px] items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px]">
-           <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8 border">
+        <header className="flex h-[60px] items-center gap-4 border-b bg-muted/40 px-6">
+           <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 border">
                 <AvatarImage src={activeChat.user.avatarUrl} alt={activeChat.user.name} />
                 <AvatarFallback>{activeChat.user.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="font-semibold">{activeChat.user.name}</span>
+            <div className="grid gap-0.5">
+              <p className="font-semibold">{activeChat.user.name}</p>
+              <p className="text-xs text-muted-foreground">Online</p>
+            </div>
            </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+        <div className="border-b bg-background/95 p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-4">
+                <div className="relative h-16 w-16 flex-shrink-0">
+                    <Image src={activeChat.item.image.imageUrl} alt={activeChat.item.title} fill className="rounded-md object-cover" />
+                </div>
+                <div className="flex-1">
+                    <p className="font-semibold leading-snug">{activeChat.item.title}</p>
+                    {activeChat.item.listingType === "Sell" && activeChat.item.price ? (
+                        <p className="font-bold text-primary">₹{activeChat.item.price.toLocaleString()}</p>
+                    ) : (
+                        <Badge variant="secondary">{activeChat.item.listingType}</Badge>
+                    )}
+                </div>
+                <Button variant="outline" asChild>
+                    <Link href={`/item/${activeChat.item.id}`}>View Listing</Link>
+                </Button>
+            </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -80,20 +105,42 @@ export default function ChatPage() {
               )}
               <div
                 className={cn(
-                  "max-w-xs rounded-lg p-3 md:max-w-md",
+                  "max-w-md rounded-lg p-3",
                   message.sender === "me"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
                 )}
               >
                 <p className="text-sm">{message.text}</p>
-                 <p className="mt-1 text-right text-xs opacity-70">{message.timestamp}</p>
+                 <div className="mt-2 flex items-center justify-end gap-1 text-xs opacity-70">
+                    <span>{message.timestamp}</span>
+                    {message.sender === 'me' && (
+                        <CheckCheck className={cn("h-4 w-4", message.read ? "text-blue-400" : "")} />
+                    )}
+                 </div>
               </div>
             </div>
           ))}
+           <div className="flex items-end gap-2 justify-start">
+             <Avatar className="h-8 w-8">
+                <AvatarImage src={activeChat.user.avatarUrl} />
+                <AvatarFallback>{activeChat.user.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-1 rounded-lg bg-muted p-3">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground" style={{ animationDelay: '0s' }} />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground" style={{ animationDelay: '0.2s' }} />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground" style={{ animationDelay: '0.4s' }} />
+            </div>
+           </div>
         </div>
-        <div className="border-t bg-muted/40 p-4">
-          <form className="relative">
+
+        <div className="border-t bg-muted/40 p-4 space-y-3">
+           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <Button size="sm" variant="outline" className="flex-shrink-0">Is this available?</Button>
+              <Button size="sm" variant="outline" className="flex-shrink-0">I'll take it!</Button>
+              <Button size="sm" variant="outline" className="flex-shrink-0">When can we meet?</Button>
+           </div>
+           <form className="relative">
             <Input
               placeholder="Type your message..."
               className="pr-20 bg-background"

@@ -39,6 +39,7 @@ export type Item = {
 
 export type Chat = {
     id: string;
+    item: Pick<Item, 'id' | 'title' | 'image' | 'price' | 'listingType'>;
     user: {
         id: string;
         name: string;

@@ -139,14 +139,28 @@ export const items: Item[] = [
 ];
 
 export const chats: Chat[] = [
-    { id: 'chat-1', user: { id: users[1].id, name: users[1].displayName!, avatarUrl: users[1].photoURL! }, lastMessage: "Is this still available?", lastMessageTimestamp: "10m ago", unreadCount: 1 },
-    { id: 'chat-2', user: { id: users[2].id, name: users[2].displayName!, avatarUrl: users[2].photoURL! }, lastMessage: "Great, I can pick it up tomorrow.", lastMessageTimestamp: "1h ago", unreadCount: 0 },
+    { 
+        id: 'chat-1', 
+        item: items[0],
+        user: { id: users[1].id, name: users[1].displayName!, avatarUrl: users[1].photoURL! }, 
+        lastMessage: "Is this still available?", 
+        lastMessageTimestamp: "10m ago", 
+        unreadCount: 1 
+    },
+    { 
+        id: 'chat-2', 
+        item: items[2],
+        user: { id: users[2].id, name: users[2].displayName!, avatarUrl: users[2].photoURL! }, 
+        lastMessage: "Great, I can pick it up tomorrow.", 
+        lastMessageTimestamp: "1h ago", 
+        unreadCount: 0 
+    },
 ];
 
 export const messages: ChatMessage[] = [
     { id: 'msg-1', sender: { name: users[1].displayName!, avatarUrl: users[1].photoURL! }, text: "Hi! I'm interested in the laptop. Is it still available?", timestamp: "12m ago", read: true },
     { id: 'msg-2', sender: 'me', text: "Hey! Yes, it is.", timestamp: "11m ago", read: true },
-    { id: 'msg-3', sender: { name: users[1].displayName!, avatarUrl: users[1].photoURL! }, text: "Great. Would you be open to $400?", timestamp: "10m ago", read: false },
+    { id: 'msg-3', sender: { name: users[1].displayName!, avatarUrl: users[1].photoURL! }, text: "Great. Would you be open to a lower price?", timestamp: "10m ago", read: false },
 ];
 
 export const notifications: Notification[] = [
