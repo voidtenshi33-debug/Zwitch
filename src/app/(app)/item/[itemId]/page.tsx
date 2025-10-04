@@ -39,9 +39,9 @@ const mockItem = {
     price: 8000,
     listingType: 'Sell',
     imageUrls: [
-        "https://images.unsplash.com/photo-1546435770-a3e426bf40B1",
-        "https://images.unsplash.com/photo-1613040809024-b4efc1ba69c7",
-        "https://images.unsplash.com/photo-1596700247352-32b3a88b58aaa",
+        "https://images.unsplash.com/photo-1546435770-a3e426bf40B1?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1613040809024-b4efc1ba69c7?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1596700247352-32b3a88b58aaa?q=80&w=1200&auto=format&fit=crop",
     ],
     tags: ["Audio Devices", "Working", "Featured"],
     description: "WH-1000XM4 model. Excellent condition, comes with the original case. The sound quality is amazing. I've only used it for about 6 months and am selling because I got a new pair as a gift. No scratches or marks.",
@@ -194,3 +194,5 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
     </div>
   );
 }
+
+    

@@ -32,7 +32,7 @@ const sampleItems: Item[] = [
       condition: "Used - Like New",
       listingType: "Sell",
       price: 8000,
-      imageUrls: ["https://images.unsplash.com/photo-1546435770-a3e426bf40B1"],
+      imageUrls: ["https://images.unsplash.com/photo-1546435770-a3e426bf40B1?q=80&w=800&auto=format&fit=crop"],
       locality: "Baner",
       ownerId: "user_02",
       ownerName: "Anjali Sharma",
@@ -50,7 +50,7 @@ const sampleItems: Item[] = [
       condition: "Used - Good",
       listingType: "Sell",
       price: 35000,
-      imageUrls: ["https://images.unsplash.com/photo-1496181133206-80ce9b88a853"],
+      imageUrls: ["https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800&auto=format&fit=crop"],
       locality: "Kothrud",
       ownerId: "user_01",
       ownerName: "Rohan Kumar",
@@ -68,7 +68,7 @@ const sampleItems: Item[] = [
       condition: "Needs Minor Repair",
       listingType: "Donate",
       price: 0,
-      imageUrls: ["https://images.unsplash.com/photo-1592224907029-2b5e03a088a2"],
+      imageUrls: ["https://images.unsplash.com/photo-1592224907029-2b5e03a088a2?q=80&w=800&auto=format&fit=crop"],
       locality: "Viman Nagar",
       ownerId: "user_02",
       ownerName: "Anjali Sharma",
@@ -86,7 +86,7 @@ const sampleItems: Item[] = [
       condition: "Used - Like New",
       listingType: "Sell",
       price: 2500,
-      imageUrls: ["https://images.unsplash.com/photo-1618384887924-2f80214156b2"],
+      imageUrls: ["https://images.unsplash.com/photo-1618384887924-2f80214156b2?q=80&w=800&auto=format&fit=crop"],
       locality: "Hadapsar",
       ownerId: "user_03",
       ownerName: "Vikram Singh",
@@ -104,7 +104,7 @@ const sampleItems: Item[] = [
       condition: "For Spare Parts",
       listingType: "Donate",
       price: 0,
-      imageUrls: ["https://images.unsplash.com/photo-1586221434133-28b3a03358c5"],
+      imageUrls: ["https://images.unsplash.com/photo-1586221434133-28b3a03358c5?q=80&w=800&auto=format&fit=crop"],
       locality: "Viman Nagar",
       ownerId: "user_02",
       ownerName: "Anjali Sharma",
@@ -151,7 +151,7 @@ const ItemCarousel = ({ title, items, icon, viewAllHref, userWishlist }: { title
 
 
 export default function DashboardPage({ selectedLocality, searchText = "" }: DashboardPageProps) {
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState('All');
   const firestore = useFirestore();
   const { user: authUser } = useUser();
 
@@ -178,7 +178,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
           filteredItems = sampleItems.filter(item => item.locality === selectedLocality);
       }
 
-      if (activeCategory !== 'all') {
+      if (activeCategory !== 'All') {
         filteredItems = filteredItems.filter(item => item.category === activeCategory);
       }
 
@@ -253,7 +253,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
         </div>
       ) : (
         <>
-          {featuredItems && featuredItems.length > 0 && activeCategory === 'all' && searchText.length < 3 && (
+          {featuredItems && featuredItems.length > 0 && activeCategory === 'All' && searchText.length < 3 && (
             <ItemCarousel 
               title="Featured Items" 
               items={featuredItems} 
@@ -263,7 +263,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
             />
           )}
 
-          {donationItems && donationItems.length > 0 && activeCategory === 'all' && searchText.length < 3 && (
+          {donationItems && donationItems.length > 0 && activeCategory === 'All' && searchText.length < 3 && (
             <ItemCarousel 
               title="Donations Corner"
               items={donationItems}
@@ -296,4 +296,3 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
 }
 
     
-
