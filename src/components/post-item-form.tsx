@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, Suspense } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { collection, addDoc, Timestamp } from "firebase/firestore"
@@ -67,7 +67,7 @@ const formSchema = z.object({
   images: z.array(z.instanceof(File)).min(1, "Please upload at least one image.").max(5, "You can upload a maximum of 5 images."),
 }).refine(data => {
     if (data.listingType === "Sell") {
-        return data.price !== undefined && data.price > 0;
+        return data.price !== undefined && data.price >= 0;
     }
     return true;
 }, {
@@ -77,7 +77,8 @@ const formSchema = z.object({
 
 const conditions: ItemCondition[] = ['New', 'Used - Like New', 'Used - Good', 'Needs Minor Repair', 'For Spare Parts', 'Working', 'For Parts Only'];
 
-export function PostItemForm() {
+
+function PostItemFormContent() {
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -96,10 +97,10 @@ export function PostItemForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: searchParams.get('title') || "",
+      title: "",
       brand: "",
       description: "",
-      category: searchParams.get('category') || "",
+      category: "",
       condition: "",
       listingType: "Sell",
       price: undefined,
@@ -158,7 +159,7 @@ export function PostItemForm() {
             category: values.category,
             condition: values.condition,
             listingType: values.listingType,
-            price: values.listingType === 'Sell' ? values.price : 0,
+            price: values.listingType === 'Sell' ? (selectedPrice ?? values.price) : 0,
             locality: values.locality,
             imageUrls: imageUrls,
             ownerId: authUser.uid,
@@ -423,7 +424,17 @@ export function PostItemForm() {
               <FormLabel>How do you want to list this?</FormLabel>
               <FormControl>
                 <RadioGroup
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    if (value !== 'Sell') {
+                      form.setValue('price', 0);
+                      setSelectedPrice(0);
+                    } else if (minPrice !== null && maxPrice !== null) {
+                        const initialPrice = Math.round((minPrice + maxPrice) / 2);
+                        setSelectedPrice(initialPrice);
+                        form.setValue('price', initialPrice);
+                    }
+                  }}
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
                   disabled={isSubmitting}
@@ -490,7 +501,9 @@ export function PostItemForm() {
                                 value={field.value ?? ''}
                                 onChange={(e) => {
                                     const val = e.target.value;
-                                    field.onChange(val === '' ? undefined : parseFloat(val));
+                                    const price = val === '' ? undefined : parseFloat(val);
+                                    field.onChange(price);
+                                    if(price !== undefined) setSelectedPrice(price); else setSelectedPrice(null);
                                 }}
                                 disabled={isSubmitting} 
                             />
@@ -530,6 +543,11 @@ export function PostItemForm() {
   )
 }
 
-    
-
-    
+// Wrap the component that uses useSearchParams with Suspense
+export function PostItemForm() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PostItemFormContent />
+    </Suspense>
+  )
+}

@@ -307,7 +307,3 @@ export default function ValuatorPage() {
     </>
   );
 }
-
-    
-
-    
