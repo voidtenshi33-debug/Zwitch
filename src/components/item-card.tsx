@@ -83,7 +83,7 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-lg">
       <div className="relative">
-        <Link href="#" className="absolute inset-0 z-10">
+        <Link href={`/item/${item.id}`} className="absolute inset-0 z-10">
             <span className="sr-only">View Item</span>
         </Link>
         <div className="aspect-[4/3] w-full">
@@ -111,7 +111,7 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
       <CardContent className="flex flex-1 flex-col p-4 pb-2">
         <div className="flex-1">
           <h3 className="font-headline text-lg font-bold tracking-tight">
-              <Link href="#" className="hover:underline z-10 relative">{item.title}</Link>
+              <Link href={`/item/${item.id}`} className="hover:underline z-10 relative">{item.title}</Link>
           </h3>
           <p className="font-headline text-xl font-bold text-foreground mt-1">
             {item.listingType === "Sell" && item.price ? `₹${item.price.toLocaleString('en-IN')}` : <span className="text-primary">{item.listingType}</span>}
@@ -124,7 +124,7 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
       </CardContent>
       <CardFooter className="p-2">
         <Button asChild className="w-full" variant="outline">
-            <Link href="#">View Now</Link>
+            <Link href={`/item/${item.id}`}>View Now</Link>
         </Button>
       </CardFooter>
     </Card>
