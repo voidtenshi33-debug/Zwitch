@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -22,8 +23,17 @@ import { CameraCapture } from '@/components/camera-capture';
 
 const valuatorFormSchema = z.object({
   deviceType: z.string().min(1, 'Please select a device type.'),
+  otherDeviceType: z.string().optional(),
   model: z.string().min(2, 'Please enter a model name.'),
   images: z.array(z.instanceof(File)).min(1, "Please upload at least one image showing the item's condition.").max(3, "You can upload a maximum of 3 images."),
+}).refine(data => {
+  if (data.deviceType === 'Other') {
+    return data.otherDeviceType && data.otherDeviceType.length > 0;
+  }
+  return true;
+}, {
+  message: "Please specify the device type.",
+  path: ["otherDeviceType"],
 });
 
 const deviceTypes = ["Mobile Phone", "Laptop", "Tablet", "Smartwatch", "Headphones", "Camera", "Other"];
@@ -49,10 +59,13 @@ export default function ValuatorPage() {
     resolver: zodResolver(valuatorFormSchema),
     defaultValues: {
       deviceType: '',
+      otherDeviceType: '',
       model: '',
       images: [],
     },
   });
+
+  const deviceType = form.watch('deviceType');
 
   async function onSubmit(values: z.infer<typeof valuatorFormSchema>) {
     setIsLoading(true);
@@ -60,8 +73,10 @@ export default function ValuatorPage() {
     try {
       const photoDataUris = await Promise.all(values.images.map(fileToDataUri));
 
+      const finalDeviceType = values.deviceType === 'Other' ? values.otherDeviceType! : values.deviceType;
+
       const valuationResult = await deviceValuator({
-        deviceType: values.deviceType,
+        deviceType: finalDeviceType,
         model: values.model,
         photoDataUris: photoDataUris,
       });
@@ -195,6 +210,22 @@ export default function ValuatorPage() {
                   </FormItem>
                 )}
               />
+
+              {deviceType === 'Other' && (
+                <FormField
+                  control={form.control}
+                  name="otherDeviceType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Please Specify Device Type</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Gaming Console" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
