@@ -3,27 +3,39 @@
 import Link from 'next/link';
 import { categories } from '@/lib/categories';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
-export function CategoryScroller() {
+interface CategoryScrollerProps {
+  activeCategory: string;
+  onCategoryChange: (slug: string) => void;
+}
+
+
+export function CategoryScroller({ activeCategory, onCategoryChange }: CategoryScrollerProps) {
+  const allCategory = { id: 0, name: 'All', icon: () => null, slug: 'all' };
+  const displayCategories = [allCategory, ...categories];
+
   return (
     <div className="relative py-4">
-      <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-        {categories.map((category) => (
-          <Link
-            href={`/search?category=${category.slug}`}
-            key={category.id}
-            className="group flex-shrink-0 text-center transition-transform duration-200 ease-in-out hover:scale-105"
-          >
-            <div className={cn(
-              "flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary/70 backdrop-blur-sm transition-all duration-200 group-hover:bg-primary/90 group-hover:shadow-lg"
-            )}>
-              <category.icon className="h-10 w-10 text-muted-foreground transition-colors duration-200 group-hover:text-primary-foreground" />
+      <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+        {displayCategories.map((category) => {
+          const isActive = category.name === activeCategory;
+          return (
+            <div key={category.id} className="flex-shrink-0 text-center">
+              <Button
+                variant={isActive ? "default" : "secondary"}
+                className={cn(
+                  "flex h-auto flex-col items-center justify-center gap-2 rounded-2xl p-3 transition-all duration-200 w-24 h-24 hover:shadow-lg",
+                  isActive && "bg-primary text-primary-foreground"
+                )}
+                onClick={() => onCategoryChange(category.name)}
+              >
+                  {category.id !== 0 && <category.icon className="h-8 w-8" />}
+                  <span className="text-xs font-medium">{category.name}</span>
+              </Button>
             </div>
-            <p className="mt-2 text-sm font-medium text-muted-foreground transition-colors duration-200 group-hover:text-primary">
-              {category.name}
-            </p>
-          </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
