@@ -8,7 +8,7 @@ import React, { useEffect, useState, Suspense, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { collection, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore"
+import { collection, addDoc, Timestamp } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useDebounce } from "use-debounce";
 
@@ -221,27 +221,30 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
       }
   }, [debouncedBrand, debouncedCategory, formImages, triggerValuation, valuationData]);
   
-
-  const uploadImagesAndUpdateDoc = async (images: File[], docId: string): Promise<void> => {
-    if (!firestore) return;
+  const uploadImages = async (images: File[], docId: string): Promise<string[]> => {
     const storage = getStorage();
     const imageUrls: string[] = [];
-    try {
-      for (const image of images) {
+    
+    const uploadPromises = images.map(image => {
         const storageRef = ref(storage, `items/${docId}/${image.name}`);
-        const snapshot = await uploadBytes(storageRef, image);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        imageUrls.push(downloadURL);
-      }
-      const itemRef = doc(firestore, "items", docId);
-      await updateDoc(itemRef, { imageUrls: imageUrls });
-      console.log("Item document updated with image URLs.");
-    } catch (error) {
-        console.error("Error uploading images or updating document:", error);
-        // Optionally, handle this error case, e.g., by updating the item status to 'Draft'
-    }
-  };
+        return uploadBytes(storageRef, image).then(snapshot => getDownloadURL(snapshot.ref));
+    });
 
+    try {
+        const urls = await Promise.all(uploadPromises);
+        imageUrls.push(...urls);
+        return imageUrls;
+    } catch (error) {
+        console.error("Error uploading images:", error);
+        toast({
+            variant: "destructive",
+            title: "Image Upload Failed",
+            description: "There was an error uploading your images. Please try again.",
+        });
+        // Re-throw the error to be caught by the onSubmit handler
+        throw error;
+    }
+};
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore || !authUser) {
@@ -251,8 +254,13 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
     setIsSubmitting(true);
 
     try {
-        // Create the item document first with placeholder for images
-        const docRef = await addDoc(collection(firestore, "items"), {
+        // 1. Upload images and get their URLs
+        // We use a temporary ID for the storage path to avoid collisions
+        const tempDocId = collection(firestore, "items").doc().id;
+        const imageUrls = await uploadImages(values.images, tempDocId);
+
+        // 2. Now, create the document in Firestore with the real image URLs
+        await addDoc(collection(firestore, "items"), {
             title: values.title,
             brand: values.brand,
             description: values.description,
@@ -261,39 +269,39 @@ function PostItemFormContent({ valuationData }: PostItemFormProps) {
             listingType: values.listingType,
             price: values.listingType === 'Sell' ? (selectedPrice ?? values.price) : 0,
             locality: values.locality,
-            imageUrls: [], // Start with empty array
+            imageUrls: imageUrls,
             ownerId: authUser.uid,
             ownerName: authUser.displayName || "Anonymous",
             ownerAvatarUrl: authUser.photoURL,
-            ownerRating: 0,
+            ownerRating: 0, // This should probably be fetched from the user's profile
             status: 'Available',
             isFeatured: false,
             postedAt: Timestamp.now(),
         });
-
+        
         toast({
-            title: "Listing Submitted!",
-            description: "Your item has been listed. Images are now uploading.",
+            title: "Success!",
+            description: "Your item has been listed.",
         });
-        
-        // Navigate away immediately
-        router.push('/dashboard');
-        
-        // Start image uploads in the background
-        uploadImagesAndUpdateDoc(values.images, docRef.id);
 
-        // Reset form state after navigating
+        // 3. Navigate away and reset the form
+        router.push('/dashboard');
         form.reset();
         setImagePreviews([]);
 
     } catch (error) {
         console.error("Error submitting form:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Submission Failed',
-            description: 'There was an error posting your item. Please try again.',
-        });
-        setIsSubmitting(false); // Only set back on error
+        // Toast for specific image upload failure is handled in `uploadImages`
+        // This is a more general fallback.
+        if (!toast.toString().includes("Image Upload Failed")) {
+            toast({
+                variant: 'destructive',
+                title: 'Submission Failed',
+                description: 'There was an error posting your item. Please try again.',
+            });
+        }
+    } finally {
+        setIsSubmitting(false);
     }
   }
   
@@ -671,3 +679,5 @@ export function PostItemForm({ valuationData }: PostItemFormProps) {
     </Suspense>
   )
 }
+
+  
