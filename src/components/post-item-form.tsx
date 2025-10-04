@@ -7,7 +7,7 @@ import { z } from "zod"
 import React, { useEffect, useState, Suspense } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { collection, addDoc, Timestamp } from "firebase/firestore"
+import { collection, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 import { Button } from "@/components/ui/button"
@@ -130,16 +130,23 @@ function PostItemFormContent() {
   
   const listingType = form.watch("listingType")
 
-  const uploadImages = async (images: File[]): Promise<string[]> => {
+  const uploadImagesAndUpdateDoc = async (images: File[], docId: string): Promise<void> => {
     const storage = getStorage();
     const imageUrls: string[] = [];
-    for (const image of images) {
-      const storageRef = ref(storage, `items/${Date.now()}_${image.name}`);
-      const snapshot = await uploadBytes(storageRef, image);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      imageUrls.push(downloadURL);
+    try {
+      for (const image of images) {
+        const storageRef = ref(storage, `items/${docId}/${image.name}`);
+        const snapshot = await uploadBytes(storageRef, image);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        imageUrls.push(downloadURL);
+      }
+      const itemRef = doc(firestore!, "items", docId);
+      await updateDoc(itemRef, { imageUrls: imageUrls });
+      console.log("Item document updated with image URLs.");
+    } catch (error) {
+        console.error("Error uploading images or updating document:", error);
+        // Optionally, handle this error case, e.g., by updating the item status to 'Draft'
     }
-    return imageUrls;
   };
 
 
@@ -149,10 +156,10 @@ function PostItemFormContent() {
         return;
     }
     setIsSubmitting(true);
+
     try {
-        const imageUrls = await uploadImages(values.images);
-        
-        await addDoc(collection(firestore, "items"), {
+        // Create the item document first with placeholder for images
+        const docRef = await addDoc(collection(firestore, "items"), {
             title: values.title,
             brand: values.brand,
             description: values.description,
@@ -161,11 +168,11 @@ function PostItemFormContent() {
             listingType: values.listingType,
             price: values.listingType === 'Sell' ? (selectedPrice ?? values.price) : 0,
             locality: values.locality,
-            imageUrls: imageUrls,
+            imageUrls: [], // Start with empty array
             ownerId: authUser.uid,
             ownerName: authUser.displayName || "Anonymous",
             ownerAvatarUrl: authUser.photoURL,
-            ownerRating: 0, // This would be calculated or fetched
+            ownerRating: 0,
             status: 'Available',
             isFeatured: false,
             postedAt: Timestamp.now(),
@@ -173,12 +180,18 @@ function PostItemFormContent() {
 
         toast({
             title: "Listing Submitted!",
-            description: "Your electronic item has been successfully listed.",
+            description: "Your item has been listed. Images are now uploading.",
         });
         
+        // Navigate away immediately
+        router.push('/dashboard');
+        
+        // Start image uploads in the background
+        uploadImagesAndUpdateDoc(values.images, docRef.id);
+
+        // Reset form state after navigating
         form.reset();
         setImagePreviews([]);
-        router.push('/dashboard');
 
     } catch (error) {
         console.error("Error submitting form:", error);
@@ -187,8 +200,7 @@ function PostItemFormContent() {
             title: 'Submission Failed',
             description: 'There was an error posting your item. Please try again.',
         });
-    } finally {
-        setIsSubmitting(false);
+        setIsSubmitting(false); // Only set back on error
     }
   }
   
@@ -551,3 +563,5 @@ export function PostItemForm() {
     </Suspense>
   )
 }
+
+    
