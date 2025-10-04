@@ -5,7 +5,7 @@ import { Star, Package, Recycle, Calendar, User, MoreVertical } from "lucide-rea
 import { useMemo } from "react";
 import { collection, doc, query, where } from "firebase/firestore";
 
-import { useCollection, useDoc, useFirestore, useUser } from "@/firebase";
+import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import type { Item, User as UserType } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -38,13 +38,13 @@ export default function ProfilePage() {
   const { user: authUser, isUserLoading: isAuthUserLoading } = useUser();
   const firestore = useFirestore();
 
-  const userRef = useMemo(() => {
+  const userRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
     return doc(firestore, "users", authUser.uid);
   }, [firestore, authUser]);
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserType>(userRef);
 
-  const itemsQuery = useMemo(() => {
+  const itemsQuery = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
     return query(collection(firestore, "items"), where("seller.id", "==", authUser.uid));
   }, [firestore, authUser]);

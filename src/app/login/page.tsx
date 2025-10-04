@@ -25,6 +25,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
@@ -38,6 +39,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -51,6 +53,11 @@ export default function LoginPage() {
         photoURL: user.photoURL,
         email: user.email,
         createdAt: new Date().toISOString(),
+        joinDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        // Set default values if they don't exist
+        avgRating: 0,
+        itemsRecycled: 0,
+        lastKnownLocality: 'Kothrud',
       }, { merge: true });
 
       router.push('/dashboard');

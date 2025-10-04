@@ -9,9 +9,9 @@ const findImage = (id: string) => {
 };
 
 export const users: User[] = [
-  { id: 'user-1', name: 'Alex Doe', avatarUrl: findImage('avatar-1').imageUrl, joinDate: '2023-05-15', avgRating: 4.8, itemsRecycled: 12, lastKnownLocality: 'Kothrud' },
-  { id: 'user-2', name: 'Jane Smith', avatarUrl: findImage('avatar-2').imageUrl, joinDate: '2022-11-20', avgRating: 4.9, itemsRecycled: 25, lastKnownLocality: 'Viman Nagar' },
-  { id: 'user-3', name: 'Ben Starr', avatarUrl: findImage('avatar-3').imageUrl, joinDate: '2024-01-10', avgRating: 4.5, itemsRecycled: 5, lastKnownLocality: 'Koregaon Park' },
+  { id: 'user-1', displayName: 'Alex Doe', photoURL: findImage('avatar-1').imageUrl, email: 'alex@example.com', createdAt: '2023-05-15T10:00:00Z', joinDate: 'May 2023', avgRating: 4.8, itemsRecycled: 12, lastKnownLocality: 'Kothrud' },
+  { id: 'user-2', displayName: 'Jane Smith', photoURL: findImage('avatar-2').imageUrl, email: 'jane@example.com', createdAt: '2022-11-20T10:00:00Z', joinDate: 'November 2022', avgRating: 4.9, itemsRecycled: 25, lastKnownLocality: 'Viman Nagar' },
+  { id: 'user-3', displayName: 'Ben Starr', photoURL: findImage('avatar-3').imageUrl, email: 'ben@example.com', createdAt: '2024-01-10T10:00:00Z', joinDate: 'January 2024', avgRating: 4.5, itemsRecycled: 5, lastKnownLocality: 'Koregaon Park' },
 ];
 
 export const loggedInUser = users[0];
@@ -29,7 +29,7 @@ export const items: Item[] = [
     condition: 'Used - Good',
     listingType: 'Sell',
     image: findImage('item-laptop'),
-    seller: users[1],
+    seller: { id: users[1].id, name: users[1].displayName!, avatarUrl: users[1].photoURL! },
     postedAt: '2 days ago',
     location: 'Viman Nagar, Pune',
     locality: 'Viman Nagar'
@@ -43,7 +43,7 @@ export const items: Item[] = [
     condition: 'Used - Good',
     listingType: 'Donate',
     image: findImage('item-phone'),
-    seller: users[2],
+    seller: { id: users[2].id, name: users[2].displayName!, avatarUrl: users[2].photoURL! },
     postedAt: '5 hours ago',
     location: 'Koregaon Park, Pune',
     locality: 'Koregaon Park'
@@ -57,7 +57,7 @@ export const items: Item[] = [
     condition: 'For Spare Parts',
     listingType: 'Spare Parts',
     image: findImage('item-keyboard'),
-    seller: users[0],
+    seller: { id: users[0].id, name: users[0].displayName!, avatarUrl: users[0].photoURL! },
     postedAt: '1 week ago',
     location: 'Kothrud, Pune',
     locality: 'Kothrud'
@@ -71,7 +71,7 @@ export const items: Item[] = [
     condition: 'Used - Good',
     listingType: 'Sell',
     image: findImage('item-camera'),
-    seller: users[1],
+    seller: { id: users[1].id, name: users[1].displayName!, avatarUrl: users[1].photoURL! },
     postedAt: '3 days ago',
     location: 'Deccan Gymkhana, Pune',
     locality: 'Deccan Gymkhana'
@@ -85,7 +85,7 @@ export const items: Item[] = [
     condition: 'Used - Like New',
     listingType: 'Sell',
     image: findImage('item-headphones'),
-    seller: users[2],
+    seller: { id: users[2].id, name: users[2].displayName!, avatarUrl: users[2].photoURL! },
     postedAt: '1 day ago',
     location: 'Pimpri-Chinchwad, Pune',
     locality: 'Pimpri-Chinchwad'
@@ -99,7 +99,7 @@ export const items: Item[] = [
     condition: 'Needs Minor Repair',
     listingType: 'Sell',
     image: findImage('item-drone'),
-    seller: users[0],
+    seller: { id: users[0].id, name: users[0].displayName!, avatarUrl: users[0].photoURL! },
     postedAt: '4 days ago',
     location: 'Kothrud, Pune',
     locality: 'Kothrud'
@@ -113,7 +113,7 @@ export const items: Item[] = [
     condition: 'Used - Like New',
     listingType: 'Sell',
     image: findImage('item-tablet'),
-    seller: users[1],
+    seller: { id: users[1].id, name: users[1].displayName!, avatarUrl: users[1].photoURL! },
     postedAt: '6 days ago',
     location: 'Hinjawadi, Pune',
     locality: 'Hinjawadi'
@@ -127,7 +127,7 @@ export const items: Item[] = [
     condition: 'Needs Minor Repair',
     listingType: 'Donate',
     image: findImage('item-monitor'),
-    seller: users[2],
+    seller: { id: users[2].id, name: users[2].displayName!, avatarUrl: users[2].photoURL! },
     postedAt: '2 weeks ago',
     location: 'Hadapsar, Pune',
     locality: 'Hadapsar'
@@ -135,14 +135,14 @@ export const items: Item[] = [
 ];
 
 export const chats: Chat[] = [
-    { id: 'chat-1', user: users[1], lastMessage: "Is this still available?", lastMessageTimestamp: "10m ago", unreadCount: 1 },
-    { id: 'chat-2', user: users[2], lastMessage: "Great, I can pick it up tomorrow.", lastMessageTimestamp: "1h ago", unreadCount: 0 },
+    { id: 'chat-1', user: { id: users[1].id, name: users[1].displayName!, avatarUrl: users[1].photoURL! }, lastMessage: "Is this still available?", lastMessageTimestamp: "10m ago", unreadCount: 1 },
+    { id: 'chat-2', user: { id: users[2].id, name: users[2].displayName!, avatarUrl: users[2].photoURL! }, lastMessage: "Great, I can pick it up tomorrow.", lastMessageTimestamp: "1h ago", unreadCount: 0 },
 ];
 
 export const messages: ChatMessage[] = [
-    { id: 'msg-1', sender: users[1], text: "Hi! I'm interested in the laptop. Is it still available?", timestamp: "12m ago", read: true },
+    { id: 'msg-1', sender: { name: users[1].displayName!, avatarUrl: users[1].photoURL! }, text: "Hi! I'm interested in the laptop. Is it still available?", timestamp: "12m ago", read: true },
     { id: 'msg-2', sender: 'me', text: "Hey! Yes, it is.", timestamp: "11m ago", read: true },
-    { id: 'msg-3', sender: users[1], text: "Great. Would you be open to $400?", timestamp: "10m ago", read: false },
+    { id: 'msg-3', sender: { name: users[1].displayName!, avatarUrl: users[1].photoURL! }, text: "Great. Would you be open to $400?", timestamp: "10m ago", read: false },
 ];
 
 export const notifications: Notification[] = [
@@ -151,8 +151,6 @@ export const notifications: Notification[] = [
     { id: 'notif-3', type: 'recycle', text: "Ben Starr marked 'Older Smartphone' as recycled. Please leave a rating!", timestamp: "3h ago", isRead: false, href: '#' },
     { id: 'notif-4', type: 'admin', text: "Welcome to Zwitch! Check out our guide to get started.", timestamp: "1d ago", isRead: true, href: '#' },
 ];
-
-export const categories = ['Computers', 'Phones', 'Accessories', 'Cameras', 'Audio', 'Drones', 'Monitors', 'Gaming', 'TV & Home Theater'];
 
 export const popularLocations = [
     'Kothrud',

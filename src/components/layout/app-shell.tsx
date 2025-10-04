@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -16,7 +16,7 @@ import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { notifications, popularLocations } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
-import { useAuth, useUser, useFirestore } from '@/firebase';
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -60,15 +60,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc<UserType>(userRef);
+
   useEffect(() => {
-    // A real app would fetch this from user profile
-    if (user?.uid) {
-        // Here you would fetch the user profile from firestore
-        // and set the currentLocality from user.lastKnownLocality
-        // For now, we'll just set a default
-        setCurrentLocality('Kothrud');
+    if (userProfile?.lastKnownLocality) {
+      setCurrentLocality(userProfile.lastKnownLocality);
     }
-  }, [user]);
+  }, [userProfile]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -114,11 +117,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const handleSelectLocality = (locality: string) => {
       setCurrentLocality(locality);
       if (user) {
-        const userRef = doc(firestore, "users", user.uid);
-        setDocumentNonBlocking(userRef, { lastKnownLocality: locality }, { merge: true });
+        const userDocRef = doc(firestore, "users", user.uid);
+        setDocumentNonBlocking(userDocRef, { lastKnownLocality: locality }, { merge: true });
       }
       setIsLocationModalOpen(false);
-      // Here you would typically trigger a re-fetch of data for the new locality
+      // This will trigger a re-render in DashboardPage because the prop changes.
+      // We pass the locality to the children.
+      // A more robust solution might use a global state manager (Context/Redux).
   };
 
   const handleDetectLocation = () => {
@@ -167,6 +172,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     return null;
   }
+  
+  const childrenWithProps = React.Children.map(children, child => {
+    if (React.isValidElement(child)) {
+      // @ts-ignore
+      return React.cloneElement(child, { selectedLocality: currentLocality });
+    }
+    return child;
+  });
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] dark:bg-background">
@@ -325,7 +338,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background overflow-auto">
-          {children}
+          {childrenWithProps}
         </main>
       </div>
 

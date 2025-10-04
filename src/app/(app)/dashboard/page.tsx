@@ -14,18 +14,7 @@ import { CategoryScroller } from "@/components/category-scroller"
 import { categories } from "@/lib/categories"
 import { useUser } from '@/firebase'; // Assuming useUser gives access to user profile
 
-export default function DashboardPage() {
-  const { user } = useUser();
-  // This is a placeholder for the actual locality selection logic
-  // In a real app, this would be managed in a global state (Context, Redux, Zustand)
-  // and updated by the LocationSelectionModal in AppShell
-  const [selectedLocality, setSelectedLocality] = React.useState('Kothrud');
-
-  React.useEffect(() => {
-    // A real app might fetch this from user profile on load
-    // For now, it's just a static default
-  }, [user]);
-
+export default function DashboardPage({ selectedLocality }: { selectedLocality: string }) {
   const filteredItems = allItems.filter(item => item.locality === selectedLocality);
 
   return (

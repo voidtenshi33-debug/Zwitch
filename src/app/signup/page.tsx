@@ -24,6 +24,7 @@ export default function SignupPage() {
   
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth || !firestore) return;
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -41,7 +42,8 @@ export default function SignupPage() {
         joinDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
         avgRating: 0,
         itemsRecycled: 0,
-      });
+        lastKnownLocality: 'Kothrud', // Default locality
+      }, { merge: true });
 
       router.push('/dashboard');
     } catch (error: any) {
@@ -54,6 +56,7 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!auth || !firestore) return;
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -70,6 +73,7 @@ export default function SignupPage() {
         joinDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
         avgRating: 0,
         itemsRecycled: 0,
+        lastKnownLocality: 'Kothrud', // Default locality
       }, { merge: true });
 
       router.push('/dashboard');
