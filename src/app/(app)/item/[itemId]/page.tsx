@@ -28,6 +28,7 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 
 // This is a placeholder for the actual item data.
@@ -64,19 +65,19 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
   const isTrustedSeller = mockItem.seller.isTrusted;
 
   return (
-    <div className="container mx-auto max-w-4xl py-6">
+    <div className="container mx-auto max-w-5xl py-6">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="h-4 w-4" />
             Back to Listings
         </Link>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-12">
             {/* Left Column - Image Carousel */}
-            <div>
+            <div className="md:col-span-3">
                 <Carousel className="w-full">
                 <CarouselContent>
                     {mockItem.imageUrls.map((url, index) => (
                     <CarouselItem key={index}>
-                        <Card className="overflow-hidden">
+                        <Card className="overflow-hidden rounded-xl">
                             <CardContent className="p-0">
                             <div className="aspect-[4/3] relative">
                                 <Image
@@ -91,16 +92,21 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                     </CarouselItem>
                     ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
+                <CarouselPrevious className="-left-2 md:-left-12" />
+                <CarouselNext className="-right-2 md:-right-12" />
                 </Carousel>
+                
+                {/* Description for Desktop */}
+                <div className="hidden md:block mt-8">
+                     <h2 className="text-xl font-bold mb-2 font-headline">Description</h2>
+                    <p className="text-muted-foreground">{mockItem.description}</p>
+                </div>
             </div>
 
             {/* Right Column - Details */}
-            <div className="space-y-6">
-                {/* Section 2: Core Details */}
-                <div>
-                    <div className="flex flex-wrap gap-2 mb-2">
+            <div className="md:col-span-2 space-y-6">
+                <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
                         {mockItem.tags.map(tag => (
                             <Badge key={tag} variant={tag === 'Featured' ? 'default' : 'secondary'}>
                                 {tag === 'Featured' && <Star className="h-3 w-3 mr-1"/>}
@@ -108,16 +114,17 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                             </Badge>
                         ))}
                     </div>
-                    <h1 className="font-headline text-3xl font-bold">{mockItem.title}</h1>
-                    <p className="font-headline text-2xl font-bold text-foreground mt-2">
+                    <h1 className="font-headline text-3xl md:text-4xl font-bold">{mockItem.title}</h1>
+                    <p className="font-headline text-2xl font-bold text-foreground">
                         {mockItem.listingType === 'Sell' ? <span className="text-primary">For Sale</span> : <span className="text-primary">{mockItem.listingType}</span>}
                     </p>
                 </div>
 
-                 {/* Section 3: Trust Center */}
+                <Separator />
+                
                 <Card className="overflow-hidden bg-muted/30">
                     <CardContent className="p-4">
-                        <Link href="#">
+                        <Link href="#" className="block hover:bg-muted/50 -m-4 p-4 rounded-lg">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                 <Avatar className="h-12 w-12 border-2 border-background">
@@ -134,7 +141,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                                 </div>
                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-muted-foreground">
+                            <div className="mt-4 grid grid-cols-2 sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
                                 {mockItem.seller.badges.map(badge => {
                                     const BadgeIcon = badge.icon;
                                     return (
@@ -153,33 +160,36 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                     </CardContent>
                 </Card>
 
-                {/* Section 4: Description */}
+                <Separator />
+                
                 <div>
-                    <h2 className="text-lg font-semibold mb-2">Description</h2>
-                    <p className="text-muted-foreground">{mockItem.description}</p>
-                </div>
-
-                {/* Section 5: Location */}
-                <div>
-                    <h2 className="text-lg font-semibold mb-2">Location</h2>
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <h2 className="text-xl font-bold mb-2 font-headline">Location</h2>
+                    <div className="flex items-center gap-2 text-muted-foreground mb-3">
                         <MapPin className="h-5 w-5" />
                         <span>{mockItem.locality}, Pune</span>
                     </div>
-                     <Card className="mt-2">
+                     <Card>
                         <CardContent className="p-0">
-                            <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center text-muted-foreground">
+                            <div className="aspect-video bg-secondary rounded-lg flex items-center justify-center text-sm text-muted-foreground">
                                 Map placeholder
                             </div>
                         </CardContent>
                     </Card>
                 </div>
+                
+                {/* Description for Mobile */}
+                 <div className="md:hidden">
+                     <Separator />
+                     <h2 className="text-xl font-bold mb-2 mt-6 font-headline">Description</h2>
+                    <p className="text-muted-foreground">{mockItem.description}</p>
+                </div>
             </div>
         </div>
 
-        {/* Section 6: Action Block (Sticky Footer) */}
+        {/* Action Block (Sticky Footer) */}
         <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur-sm md:static md:bottom-auto md:left-auto md:right-auto md:z-auto md:border-none md:bg-transparent md:p-0 z-50 md:mt-8">
-            <div className="container mx-auto max-w-4xl p-4 md:p-0">
+            <div className="container mx-auto max-w-5xl p-4 md:p-0">
+                <div className="max-w-md ml-auto">
                  {isTrustedSeller && mockItem.listingType === 'Sell' ? (
                     <div className="grid grid-cols-2 gap-4">
                         <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" asChild>
@@ -190,6 +200,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                 ) : (
                     <Button size="lg" className="w-full"><MessageSquare className="mr-2 h-5 w-5"/>Message Seller</Button>
                 )}
+                </div>
             </div>
         </div>
     </div>
