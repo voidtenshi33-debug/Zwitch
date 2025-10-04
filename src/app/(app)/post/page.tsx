@@ -6,8 +6,8 @@ export default function PostItemPage() {
     <div className="container mx-auto max-w-3xl py-8">
        <Card>
           <CardHeader>
-            <CardTitle className="font-headline text-2xl">Create a New Listing</CardTitle>
-            <CardDescription>Fill out the details below to post your item on Zwitch.</CardDescription>
+            <CardTitle className="font-headline text-2xl">Give Your Item a Second Life</CardTitle>
+            <CardDescription>List your old electronics to sell, donate, or recycle.</CardDescription>
           </CardHeader>
           <CardContent>
             <PostItemForm />
