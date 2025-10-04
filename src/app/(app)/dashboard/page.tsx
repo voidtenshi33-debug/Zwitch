@@ -78,29 +78,29 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
   }, [baseQuery]);
   
   const recommendationsQuery = useMemoFirebase(() => {
-    if (!baseQuery) return null;
-    
-    let q;
+    if (!firestore || !selectedLocality) return null;
+
+    let q = collection(firestore, "items");
+    let queries: any[] = [where("locality", "==", selectedLocality)];
 
     if (effectiveSearchText) {
         const capitalizedSearchText = effectiveSearchText.charAt(0).toUpperCase() + effectiveSearchText.slice(1);
-        q = query(
-            baseQuery,
+        queries.push(
             orderBy("title"),
             startAt(capitalizedSearchText),
             endAt(capitalizedSearchText + '\uf8ff')
         );
     } else {
-        q = query(baseQuery, orderBy("postedAt", "desc"));
+        queries.push(orderBy("postedAt", "desc"));
     }
 
     if (activeCategory !== 'all') {
-      q = query(q, where("category", "==", activeCategory));
+      queries.push(where("category", "==", activeCategory));
     }
     
-    return q;
+    return query(q, ...queries);
 
-  }, [baseQuery, activeCategory, effectiveSearchText]);
+  }, [firestore, selectedLocality, activeCategory, effectiveSearchText]);
 
   const { data: featuredItems, isLoading: areFeaturedLoading } = useCollection<Item>(featuredQuery);
   const { data: donationItems, isLoading: areDonationsLoading } = useCollection<Item>(donationsQuery);
