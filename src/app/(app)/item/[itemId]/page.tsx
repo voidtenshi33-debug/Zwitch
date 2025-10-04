@@ -39,7 +39,7 @@ const mockItem = {
     price: 8000,
     listingType: 'Sell',
     imageUrls: [
-        "https://images.unsplash.com/photo-1618399329938-a337c76f6b53?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1546435770-a3e426bf40B1?q=80&w=1200&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1613040809024-b4efc1ba69c7?q=80&w=1200&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1596700247352-32b3a88b58aaa?q=80&w=1200&auto=format&fit=crop",
     ],
@@ -194,5 +194,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
     </div>
   );
 }
+
+    
 
     
