@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/select"
 import { ItemCard } from "@/components/item-card"
 import { CategoryScroller } from "@/components/category-scroller"
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, endAt, startAt, limit } from 'firebase/firestore';
-import type { Item } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, where, orderBy, endAt, startAt, limit, doc } from 'firebase/firestore';
+import type { Item, User } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ interface DashboardPageProps {
   searchText?: string;
 }
 
-const ItemCarousel = ({ title, items, icon, viewAllHref }: { title: string, items: Item[], icon: React.ElementType, viewAllHref: string }) => {
+const ItemCarousel = ({ title, items, icon, viewAllHref, userWishlist }: { title: string, items: Item[], icon: React.ElementType, viewAllHref: string, userWishlist: string[] }) => {
   const Icon = icon;
   return (
     <div className="space-y-4">
@@ -43,7 +43,7 @@ const ItemCarousel = ({ title, items, icon, viewAllHref }: { title: string, item
         <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
           {items.map(item => (
             <div key={item.id} className="w-full min-w-[280px] sm:min-w-[300px] snap-start">
-              <ItemCard item={item} />
+              <ItemCard item={item} userWishlist={userWishlist} />
             </div>
           ))}
         </div>
@@ -56,32 +56,22 @@ const ItemCarousel = ({ title, items, icon, viewAllHref }: { title: string, item
 export default function DashboardPage({ selectedLocality, searchText }: DashboardPageProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const firestore = useFirestore();
+  const { user: authUser } = useUser();
+
+  const userRef = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return doc(firestore, "users", authUser.uid);
+  }, [firestore, authUser]);
+  const { data: userProfile } = useDoc<User>(userRef);
+  const userWishlist = userProfile?.wishlist || [];
+
   const effectiveSearchText = searchText && searchText.length >= 3 ? searchText : '';
 
-
-  const baseQuery = useMemoFirebase(() => {
-    if (!firestore || !selectedLocality) return null;
-    return query(
-      collection(firestore, "items"),
-      where("locality", "==", selectedLocality)
-    );
-  }, [firestore, selectedLocality]);
-
-  const featuredQuery = useMemoFirebase(() => {
-    if (!baseQuery) return null;
-    return query(baseQuery, where("isFeatured", "==", true), limit(10));
-  }, [baseQuery]);
-
-  const donationsQuery = useMemoFirebase(() => {
-    if (!baseQuery) return null;
-    return query(baseQuery, where("listingType", "==", "Donate"), limit(10));
-  }, [baseQuery]);
-  
   const recommendationsQuery = useMemoFirebase(() => {
     if (!firestore || !selectedLocality) return null;
 
     const baseCollection = collection(firestore, 'items');
-    const queryConstraints = [where('locality', '==', selectedLocality)];
+    let queryConstraints = [where('locality', '==', selectedLocality)];
 
     // Category filter
     if (activeCategory !== 'all') {
@@ -91,6 +81,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     // Search text filter
     if (effectiveSearchText) {
       const capitalizedSearchText = effectiveSearchText.charAt(0).toUpperCase() + effectiveSearchText.slice(1);
+      // Firestore requires the first orderBy to be on the field used for range filters.
       queryConstraints.push(orderBy('title'));
       queryConstraints.push(startAt(capitalizedSearchText));
       queryConstraints.push(endAt(capitalizedSearchText + '\uf8ff'));
@@ -102,6 +93,17 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     return query(baseCollection, ...queryConstraints);
 
   }, [firestore, selectedLocality, activeCategory, effectiveSearchText]);
+
+  const featuredQuery = useMemoFirebase(() => {
+    if (!firestore || !selectedLocality) return null;
+    return query(collection(firestore, "items"), where("locality", "==", selectedLocality), where("isFeatured", "==", true), limit(10));
+  }, [firestore, selectedLocality]);
+
+  const donationsQuery = useMemoFirebase(() => {
+    if (!firestore || !selectedLocality) return null;
+    return query(collection(firestore, "items"), where("locality", "==", selectedLocality), where("listingType", "==", "Donate"), limit(10));
+  }, [firestore, selectedLocality]);
+  
 
   const { data: featuredItems, isLoading: areFeaturedLoading } = useCollection<Item>(featuredQuery);
   const { data: donationItems, isLoading: areDonationsLoading } = useCollection<Item>(donationsQuery);
@@ -167,6 +169,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
               items={featuredItems} 
               icon={Star}
               viewAllHref="#"
+              userWishlist={userWishlist}
             />
           )}
 
@@ -176,6 +179,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
               items={donationItems}
               icon={Gift}
               viewAllHref="#"
+              userWishlist={userWishlist}
             />
           )}
 
@@ -184,7 +188,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
             {recommendedItems && recommendedItems.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {recommendedItems.map((item) => (
-                    <ItemCard key={item.id} item={item} />
+                    <ItemCard key={item.id} item={item} userWishlist={userWishlist} />
                 ))}
                 </div>
             ) : (
@@ -200,5 +204,3 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     </div>
   )
 }
-
-    
