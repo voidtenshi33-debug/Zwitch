@@ -127,25 +127,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      return;
+    }
+
     setIsDetectingLocation(true);
     setLocationError(null);
+
     navigator.geolocation.getCurrentPosition(
-        (position) => {
-            // In a real app, you would use a reverse geocoding service here
-            // to convert lat/lng to a locality.
-            // For this demo, we'll just pick a random one.
-            const randomLocality = popularLocations[Math.floor(Math.random() * popularLocations.length)];
-            handleSelectLocality(randomLocality);
-            setIsDetectingLocation(false);
-        },
-        (error) => {
-            if (error.code === error.PERMISSION_DENIED) {
-                setLocationError("Location access was denied. Please enable it in your browser settings.");
-            } else {
-                setLocationError("Could not determine your location. Please select it manually.");
-            }
-            setIsDetectingLocation(false);
+      (position) => {
+        console.log("Lat:", position.coords.latitude, "Lng:", position.coords.longitude);
+        // In a real app, you would use a reverse geocoding service here
+        // to convert lat/lng to a locality name.
+        // For this demo, we'll just simulate success by picking a random locality.
+        const randomLocality = popularLocations[Math.floor(Math.random() * popularLocations.length)];
+        handleSelectLocality(randomLocality);
+        setIsDetectingLocation(false);
+      },
+      (error) => {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError("Location access was denied. Please enable it in your browser or system settings.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setLocationError("Location information is unavailable.");
+            break;
+          case error.TIMEOUT:
+            setLocationError("The request to get user location timed out.");
+            break;
+          default:
+            setLocationError("An unknown error occurred while trying to get your location.");
+            break;
         }
+        setIsDetectingLocation(false);
+      }
     );
   };
 
