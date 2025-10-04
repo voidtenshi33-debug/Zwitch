@@ -29,7 +29,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
 import { generateListingTitle } from "@/ai/flows/generate-listing-title"
 import { suggestItemCategories } from "@/ai/flows/suggest-item-categories"
-import { categories, items } from "@/lib/data"
+import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
 
 const formSchema = z.object({
@@ -154,7 +154,11 @@ export function PostItemForm() {
         const result = await suggestItemCategories({ description, photoDataUri });
         setSuggestedCategories(result.suggestedCategories);
         if (result.suggestedCategories.length > 0) {
-            form.setValue("category", result.suggestedCategories[0], { shouldValidate: true });
+            // Find a matching category from our predefined list
+            const matchedCategory = categories.find(cat => result.suggestedCategories.includes(cat.name));
+            if (matchedCategory) {
+              form.setValue("category", matchedCategory.name, { shouldValidate: true });
+            }
         }
     } catch (error) {
         console.error(error);
@@ -255,7 +259,7 @@ export function PostItemForm() {
                         <hr className="my-1"/>
                         </>
                     )}
-                    {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                    {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Button type="button" variant="outline" onClick={handleSuggestCategories} disabled={isCategoryGenerating}>

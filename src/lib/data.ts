@@ -1,5 +1,6 @@
 import { PlaceHolderImages } from './placeholder-images';
 import type { User, Item, Chat, ChatMessage, Notification, ItemCondition, ListingType } from './types';
+import { categories as appCategories } from './categories';
 
 const findImage = (id: string) => {
   const image = PlaceHolderImages.find(img => img.id === id);
@@ -24,7 +25,7 @@ export const items: Item[] = [
     title: 'Lightly Used Modern Laptop',
     description: '14-inch laptop, great for students. 256GB SSD, 8GB RAM. Only used for a year. Comes with charger.',
     price: 450,
-    category: 'Computers',
+    category: 'Laptops',
     condition: 'Used - Good',
     listingType: 'Sell',
     image: findImage('item-laptop'),
@@ -37,7 +38,7 @@ export const items: Item[] = [
     title: 'Older Smartphone for Donation',
     description: 'Works perfectly fine, just upgraded. Good for a backup phone or for someone in need.',
     price: null,
-    category: 'Phones',
+    category: 'Mobiles',
     condition: 'Used - Good',
     listingType: 'Donate',
     image: findImage('item-phone'),
@@ -50,7 +51,7 @@ export const items: Item[] = [
     title: 'Mechanical Keyboard (for parts)',
     description: 'RGB Mechanical keyboard. Some keys are not responsive, good for spare keycaps and switches.',
     price: 15,
-    category: 'Accessories',
+    category: 'Keyboards & Mice',
     condition: 'For Spare Parts',
     listingType: 'Spare Parts',
     image: findImage('item-keyboard'),
@@ -76,7 +77,7 @@ export const items: Item[] = [
     title: 'Wireless Over-Ear Headphones',
     description: 'Noise-cancelling headphones, barely used. Excellent sound quality and battery life.',
     price: 80,
-    category: 'Audio',
+    category: 'Audio Devices',
     condition: 'Used - Like New',
     listingType: 'Sell',
     image: findImage('item-headphones'),
@@ -89,7 +90,7 @@ export const items: Item[] = [
     title: 'Quadcopter Drone - Needs Repair',
     description: 'Drone took a small tumble. One propeller arm is cracked, but motors and camera are fine. Good for a tinkerer.',
     price: 50,
-    category: 'Drones',
+    category: 'Other',
     condition: 'Needs Minor Repair',
     listingType: 'Sell',
     image: findImage('item-drone'),
@@ -102,7 +103,7 @@ export const items: Item[] = [
     title: 'Digital Art Tablet',
     description: '10-inch digital drawing tablet with stylus. Perfect for aspiring artists.',
     price: 75,
-    category: 'Accessories',
+    category: 'Other',
     condition: 'Used - Like New',
     listingType: 'Sell',
     image: findImage('item-tablet'),
