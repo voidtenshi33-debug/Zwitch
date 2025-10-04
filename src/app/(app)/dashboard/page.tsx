@@ -53,7 +53,7 @@ export default function DashboardPage({ selectedLocality }: { selectedLocality?:
     setActiveCategory(categoryName);
   };
 
-  const isLoading = areItemsLoading || !selectedLocality;
+  const isLoading = areItemsLoading || !items;
 
   const pageTitle = selectedLocality ? (activeCategory === 'all'
     ? <>Browse Electronics in <span className="text-primary">{selectedLocality}</span></>
