@@ -233,6 +233,16 @@ export function PostItemForm() {
                 The more details you provide, the better the AI suggestions will be.
               </FormDescription>
               <FormMessage />
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleGenerateTitle} disabled={isTitleGenerating}>
+                  {isTitleGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Generate Title
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={handleSuggestCategories} disabled={isCategoryGenerating}>
+                  {isCategoryGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  Suggest Category
+                </Button>
+              </div>
             </FormItem>
           )}
         />
@@ -243,15 +253,9 @@ export function PostItemForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
-              <div className="flex gap-2">
-                <FormControl>
-                  <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} />
-                </FormControl>
-                <Button type="button" variant="outline" onClick={handleGenerateTitle} disabled={isTitleGenerating}>
-                  {isTitleGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Generate
-                </Button>
-              </div>
+              <FormControl>
+                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -263,7 +267,6 @@ export function PostItemForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-               <div className="flex gap-2">
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -280,11 +283,6 @@ export function PostItemForm() {
                     {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Button type="button" variant="outline" onClick={handleSuggestCategories} disabled={isCategoryGenerating}>
-                  {isCategoryGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Suggest
-                </Button>
-              </div>
               <FormMessage />
             </FormItem>
           )}
