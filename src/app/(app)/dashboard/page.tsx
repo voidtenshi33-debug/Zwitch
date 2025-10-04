@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -79,20 +80,22 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
   const recommendationsQuery = useMemoFirebase(() => {
     if (!baseQuery) return null;
     
-    let q = query(baseQuery, orderBy("postedAt", "desc"));
+    let q;
 
-    if (activeCategory !== 'all') {
-      q = query(q, where("category", "==", activeCategory));
-    }
-    
     if (effectiveSearchText) {
         const capitalizedSearchText = effectiveSearchText.charAt(0).toUpperCase() + effectiveSearchText.slice(1);
         q = query(
-            q,
+            baseQuery,
             orderBy("title"),
             startAt(capitalizedSearchText),
             endAt(capitalizedSearchText + '\uf8ff')
         );
+    } else {
+        q = query(baseQuery, orderBy("postedAt", "desc"));
+    }
+
+    if (activeCategory !== 'all') {
+      q = query(q, where("category", "==", activeCategory));
     }
     
     return q;
