@@ -55,7 +55,7 @@ const mockItem = {
         isTrusted: true,
         badges: [
             { icon: ShieldCheck, text: 'ID Verified' },
-            { icon: Award, text: '8+ Items Recycled' },
+            { icon: Award, text: '8+ Gadgets Recycled' },
             { icon: Zap, text: 'Quick Responder' },
         ],
     },
@@ -194,7 +194,3 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
     </div>
   );
 }
-
-    
-
-    

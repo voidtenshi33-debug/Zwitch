@@ -225,7 +225,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
                   Join the Pune community in reducing e-waste. Buy, sell, or donate your used gadgets today.
               </p>
               <Button asChild size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/post">Post Your Item Now</Link>
+                <Link href="/post">Post Your Gadget Now</Link>
               </Button>
           </div>
       </div>
@@ -255,7 +255,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
         <>
           {featuredItems && featuredItems.length > 0 && activeCategory === 'All' && searchText.length < 3 && (
             <ItemCarousel 
-              title="Featured Items" 
+              title="Featured Gadgets" 
               items={featuredItems} 
               icon={Star}
               viewAllHref="#"
@@ -285,7 +285,7 @@ export default function DashboardPage({ selectedLocality, searchText = "" }: Das
                 <EmptyState
                     icon={Package}
                     title="No Listings Found"
-                    description={`There are currently no listings matching your criteria. Try another category or search term!`}
+                    description={`There are currently no electronic listings matching your criteria. Try another category or search term!`}
                 />
             )}
           </div>

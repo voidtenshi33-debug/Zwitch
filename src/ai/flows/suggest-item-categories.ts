@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Suggests item categories based on the item description and images.
+ * @fileOverview Suggests e-waste categories based on the item description and images.
  *
  * - suggestItemCategories - A function that handles the item category suggestion process.
  * - SuggestItemCategoriesInput - The input type for the suggestItemCategories function.
@@ -12,12 +12,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestItemCategoriesInputSchema = z.object({
-  description: z.string().describe('The description of the item.'),
+  description: z.string().describe('The description of the electronic item.'),
   photoDataUri: z
     .string()
     .optional()
     .describe(
-      "A photo of the item, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of the electronic item, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type SuggestItemCategoriesInput = z.infer<
@@ -27,7 +27,7 @@ export type SuggestItemCategoriesInput = z.infer<
 const SuggestItemCategoriesOutputSchema = z.object({
   suggestedCategories: z
     .array(z.string())
-    .describe('The suggested categories for the item.'),
+    .describe('The suggested categories for the electronic item.'),
 });
 export type SuggestItemCategoriesOutput = z.infer<
   typeof SuggestItemCategoriesOutputSchema
@@ -43,9 +43,9 @@ const prompt = ai.definePrompt({
   name: 'suggestItemCategoriesPrompt',
   input: {schema: SuggestItemCategoriesInputSchema},
   output: {schema: SuggestItemCategoriesOutputSchema},
-  prompt: `You are an expert in item categorization for online marketplaces.
+  prompt: `You are an expert in categorizing used electronics for an e-waste marketplace.
 
-  Based on the provided item description and image (if available), suggest the most relevant categories for the item. Provide only the categories in a JSON array format.
+  Based on the provided item description and image (if available), suggest the most relevant categories for the electronic device. Provide only the categories in a JSON array format.
 
   Description: {{{description}}}
   {{#if photoDataUri}}

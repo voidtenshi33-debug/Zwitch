@@ -1,4 +1,4 @@
-import { Smartphone, Laptop, Keyboard, Monitor, Cable, Headphones, Cpu, Package, LucideIcon } from "lucide-react";
+import { Smartphone, Laptop, Keyboard, Monitor, Cable, Headphones, Cpu, Package, LucideIcon, Gamepad2, Webcam } from "lucide-react";
 
 export type Category = {
   id: number;
@@ -15,5 +15,7 @@ export const categories: Category[] = [
   { id: 5, name: 'Chargers & Cables', icon: Cable, slug: 'chargers-cables' },
   { id: 6, name: 'Audio Devices', icon: Headphones, slug: 'audio-devices' },
   { id: 7, name: 'Components', icon: Cpu, slug: 'components' },
-  { id: 8, name: 'Other', icon: Package, slug: 'other' },
+  { id: 8, name: 'Gaming Consoles', icon: Gamepad2, slug: 'gaming-consoles' },
+  { id: 9, name: 'Cameras & Webcams', icon: Webcam, slug: 'cameras-webcams' },
+  { id: 10, name: 'Other Electronics', icon: Package, slug: 'other-electronics' },
 ];

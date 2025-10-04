@@ -157,7 +157,7 @@ export function PostItemForm() {
 
         toast({
             title: "Listing Submitted!",
-            description: "Your item has been successfully listed.",
+            description: "Your electronic item has been successfully listed.",
         });
         
         form.reset();
@@ -210,7 +210,7 @@ export function PostItemForm() {
     const title = form.getValues("title");
     const category = form.getValues("category");
     if (!title || title.length < 5) {
-      toast({ variant: "destructive", title: "Please enter a title first." });
+      toast({ variant: "destructive", title: "Please enter a title for your electronic item first." });
       return;
     }
     if (!category) {
@@ -237,7 +237,7 @@ export function PostItemForm() {
   const handleGenerateTitle = async () => {
     const description = form.getValues("description");
     if (!description || description.length < 20) {
-      toast({ variant: "destructive", title: "Please write a short description first." });
+      toast({ variant: "destructive", title: "Please write a short description for your gadget first." });
       return;
     }
     setIsTitleGenerating(true);
@@ -321,10 +321,10 @@ export function PostItemForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Describe your item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating} />
+                <Textarea placeholder="Describe your electronic item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating} />
               </FormControl>
                <FormDescription>
-                Provide some images and a description, then let AI help you write a great title or suggest categories.
+                Provide some images and a description, then let AI help you write a great title or suggest categories for your gadget.
               </FormDescription>
               <FormMessage />
               <div className="flex flex-wrap gap-2 pt-2">
@@ -368,7 +368,7 @@ export function PostItemForm() {
                 <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder="Select a category for your electronic device" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -420,14 +420,14 @@ export function PostItemForm() {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your locality in Pune" />
-                    </SelectTrigger>
+                    </Trigger>
                   </FormControl>
                   <SelectContent>
                     {popularLocations.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
                   </SelectContent>
                 </Select>
                  <FormDescription>
-                This helps local buyers find your item.
+                This helps local buyers find your gadget.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -494,7 +494,7 @@ export function PostItemForm() {
 
         <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Post My Item
+          Post My Gadget
         </Button>
       </form>
     </Form>
