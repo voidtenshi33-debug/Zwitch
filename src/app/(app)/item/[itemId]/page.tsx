@@ -111,7 +111,7 @@ export default function ItemDetailsPage({ params }: { params: { itemId: string }
                     </div>
                     <h1 className="font-headline text-3xl font-bold">{mockItem.title}</h1>
                     <p className="font-headline text-2xl font-bold text-foreground mt-2">
-                        {mockItem.listingType === 'Sell' ? `₹${mockItem.price.toLocaleString('en-IN')}` : <span className="text-primary">{mockItem.listingType}</span>}
+                        {mockItem.listingType === 'Sell' ? <span className="text-primary">For Sale</span> : <span className="text-primary">{mockItem.listingType}</span>}
                     </p>
                 </div>
 
