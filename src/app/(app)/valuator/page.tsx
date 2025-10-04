@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, Tag, ImagePlus, X, Camera } from 'lucide-react';
+import { Loader2, Sparkles, Tag, ImagePlus, X, Camera, Wand2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CameraCapture } from '@/components/camera-capture';
@@ -69,12 +69,25 @@ function ValuatorPageContent() {
 
   const deviceType = form.watch('deviceType');
 
+  const rerunValuation = useCallback(async () => {
+    const values = form.getValues();
+    if (values.images.length === 0 || !values.deviceType || !values.model) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing Information',
+        description: 'Please provide device type, model, and at least one image to run the valuation.',
+      });
+      return;
+    }
+    await onSubmit(values);
+  }, [form, onSubmit]);
+
   async function onSubmit(values: z.infer<typeof valuatorFormSchema>) {
     setIsLoading(true);
-    setResult(null);
+    // Don't clear old result, so the form stays visible
+    // setResult(null); 
     try {
       const photoDataUris = await Promise.all(values.images.map(fileToDataUri));
-
       const finalDeviceType = values.deviceType === 'Other' ? values.otherDeviceType! : values.deviceType;
 
       const valuationResult = await deviceValuator({
@@ -83,6 +96,10 @@ function ValuatorPageContent() {
         photoDataUris: photoDataUris,
       });
       setResult({ ...valuationResult, images: values.images });
+      toast({
+        title: "Valuation Updated!",
+        description: "We've refreshed the listing details based on your input."
+      });
     } catch (error) {
       console.error('Error getting valuation:', error);
       toast({
@@ -95,58 +112,36 @@ function ValuatorPageContent() {
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-        const files = Array.from(e.target.files);
-        addImages(files);
-    }
-  };
-
   const addImages = (files: File[]) => {
-    const currentImageCount = imagePreviews.length;
-    if (currentImageCount + files.length > 3) {
+    const currentFiles = form.getValues("images");
+    const combinedFiles = [...currentFiles, ...files];
+    if (combinedFiles.length > 3) {
         toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 3 images.' });
         return;
     }
-    form.setValue("images", [...form.getValues("images"), ...files]);
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setImagePreviews(prev => [...prev, ...newPreviews]);
+    form.setValue("images", combinedFiles, { shouldValidate: true });
+    const newPreviews = combinedFiles.map(file => URL.createObjectURL(file));
+    setImagePreviews(newPreviews);
   };
 
   const removeImage = (index: number) => {
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+    setImagePreviews(updatedPreviews);
+    
     const currentImages = form.getValues("images");
     currentImages.splice(index, 1);
-    form.setValue("images", currentImages);
+    form.setValue("images", currentImages, { shouldValidate: true });
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center text-center py-12">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <h2 className="font-headline text-2xl font-bold">Analyzing your item... 🧠</h2>
-        <p className="text-muted-foreground">Our AI is calculating the best value for you.</p>
-      </div>
-    )
-  }
-
-  if (result) {
-    return (
-      <Card className="max-w-3xl mx-auto">
-         <CardHeader>
-           <CardTitle className="font-headline text-2xl">List Your Item</CardTitle>
-           <CardDescription>We've pre-filled the details based on our AI valuation. Just confirm and post!</CardDescription>
-         </CardHeader>
-         <CardContent>
-            <PostItemForm valuationData={result} />
-         </CardContent>
-      </Card>
-    );
-  }
+  
+  const handleImageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      addImages(Array.from(e.target.files));
+    }
+  };
 
 
   return (
-    <>
+    <div className="space-y-6">
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
@@ -154,7 +149,7 @@ function ValuatorPageContent() {
               AI Device Valuator
           </CardTitle>
           <CardDescription>
-            Find out what your old, forgotten electronics are worth. Just provide a few details and some photos to get started.
+            Find out what your old electronics are worth. Provide a few details and photos to get an instant valuation and a pre-filled listing form.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -166,7 +161,7 @@ function ValuatorPageContent() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Device Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="e.g., Mobile Phone" />
@@ -191,7 +186,7 @@ function ValuatorPageContent() {
                     <FormItem>
                       <FormLabel>Please Specify Device Type</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Gaming Console" {...field} />
+                        <Input placeholder="e.g., Gaming Console" {...field} disabled={isLoading} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -206,7 +201,7 @@ function ValuatorPageContent() {
                   <FormItem>
                     <FormLabel>Brand and Model</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Apple iPhone 11" {...field} />
+                      <Input placeholder="e.g., Apple iPhone 11" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -235,7 +230,7 @@ function ValuatorPageContent() {
                             <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                                 <ImagePlus className="h-8 w-8" />
                                 <span className="mt-2 text-xs text-center">Add Photo</span>
-                                <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isLoading} />
+                                <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageInputChange} disabled={isLoading} />
                             </label>
                              <button type="button" onClick={() => setIsCameraOpen(true)} className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                                 <Camera className="h-8 w-8" />
@@ -252,12 +247,36 @@ function ValuatorPageContent() {
               
               <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Get My Valuation
+                {result ? "Re-run Valuation" : "Get My Valuation"}
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
+      
+      {isLoading && !result && (
+        <div className="flex flex-col items-center justify-center text-center py-12">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <h2 className="font-headline text-2xl font-bold">Analyzing your item... 🧠</h2>
+            <p className="text-muted-foreground">Our AI is calculating the best value for you.</p>
+        </div>
+      )}
+
+      {result && (
+        <Card className="max-w-2xl mx-auto">
+           <CardHeader>
+             <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                <Wand2 className="h-6 w-6 text-primary"/>
+                AI-Generated Listing
+             </CardTitle>
+             <CardDescription>We've pre-filled the details based on our AI valuation. Review, adjust, and post your item!</CardDescription>
+           </CardHeader>
+           <CardContent>
+              <PostItemForm valuationData={result} />
+           </CardContent>
+        </Card>
+      )}
+
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
@@ -274,7 +293,7 @@ function ValuatorPageContent() {
           />
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 
@@ -285,3 +304,5 @@ export default function ValuatorPageWrapper() {
     </Suspense>
   )
 }
+
+    
