@@ -46,7 +46,7 @@ export default function ProfilePage() {
 
   const itemsQuery = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
-    return query(collection(firestore, "items"), where("seller.id", "==", authUser.uid));
+    return query(collection(firestore, "items"), where("ownerId", "==", authUser.uid));
   }, [firestore, authUser]);
   const { data: userItems, isLoading: areItemsLoading } = useCollection<Item>(itemsQuery);
 
@@ -90,7 +90,7 @@ export default function ProfilePage() {
         <CardContent className="p-6">
           <div className="flex flex-col items-center gap-6 text-center md:flex-row md:text-left">
             <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-              <AvatarImage src={userProfile.photoURL || ''} alt={userProfile.displayName || ''} />
+              <AvatarImage src={userProfile.photoURL || undefined} alt={userProfile.displayName || ''} />
               <AvatarFallback className="text-3xl">{getInitials(userProfile.displayName)}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 gap-1">
@@ -141,7 +141,7 @@ export default function ProfilePage() {
             {(userItems?.length || 0) > 0 ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {userItems!.map(item => (
-                        <ItemCard key={item.id} item={item} />
+                        <ItemCard key={item.id} item={item} userWishlist={userProfile.wishlist || []} />
                     ))}
                 </div>
             ) : (

@@ -163,7 +163,7 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
   const userWishlist = userProfile?.wishlist || [];
 
   // --- MOCK DATA IMPLEMENTATION ---
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [featuredItems, setFeaturedItems] = useState<Item[]>([]);
   const [donationItems, setDonationItems] = useState<Item[]>([]);
   const [recommendedItems, setRecommendedItems] = useState<Item[]>([]);
@@ -172,7 +172,11 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     setIsLoading(true);
     // Simulate network delay
     setTimeout(() => {
-      let filteredItems = sampleItems.filter(item => item.locality === selectedLocality);
+      let filteredItems = sampleItems;
+
+      if(selectedLocality) {
+          filteredItems = sampleItems.filter(item => item.locality === selectedLocality);
+      }
 
       if (activeCategory !== 'all') {
         filteredItems = filteredItems.filter(item => item.category === activeCategory);
@@ -184,8 +188,8 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
           );
       }
       
-      setFeaturedItems(sampleItems.filter(item => item.isFeatured && item.locality === selectedLocality));
-      setDonationItems(sampleItems.filter(item => item.listingType === 'Donate' && item.locality === selectedLocality));
+      setFeaturedItems(sampleItems.filter(item => item.isFeatured && (selectedLocality ? item.locality === selectedLocality : true)));
+      setDonationItems(sampleItems.filter(item => item.listingType === 'Donate' && (selectedLocality ? item.locality === selectedLocality : true)));
       setRecommendedItems(filteredItems);
       setIsLoading(false);
     }, 500);
@@ -290,5 +294,3 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
     </div>
   )
 }
-
-    
