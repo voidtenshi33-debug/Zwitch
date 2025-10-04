@@ -4,14 +4,17 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown, Star
+  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown, Star, Languages
 } from 'lucide-react';
+import { useTranslation } from 'next-i18next';
+import { appWithTranslation } from 'next-i18next';
+import nextI18NextConfig from '../../../../next-i18next.config.js';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -23,11 +26,11 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { User as UserType } from '@/lib/types';
 
 
-const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Home' },
-  { href: '/chat', icon: MessageSquare, label: 'Chats' },
-  { href: '/wishlist', icon: Heart, label: 'Wishlist' },
-  { href: '/profile', icon: User, label: 'Profile' },
+const getNavItems = (t: Function) => [
+  { href: '/dashboard', icon: Home, label: t('home') },
+  { href: '/chat', icon: MessageSquare, label: t('chats') },
+  { href: '/wishlist', icon: Heart, label: t('wishlist') },
+  { href: '/profile', icon: User, label: t('profile') },
 ];
 
 function getInitials(name: string | null | undefined) {
@@ -52,7 +55,9 @@ const popularLocations = [
     'Camp',
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function AppShellComponent({ children }: { children: React.ReactNode }) {
+  const { t, i18n } = useTranslation('common');
+  const navItems = getNavItems(t);
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = React.useState(false);
@@ -217,6 +222,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return child;
   });
 
+  const handleLanguageChange = (lang: string) => {
+    i18n.changeLanguage(lang);
+  };
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] dark:bg-background">
       {/* Desktop Sidebar */}
@@ -309,7 +318,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <ChevronDown className="ml-1 h-4 w-4" />
               </>
             ) : (
-              <span className="ml-2 hidden sm:inline">Select Location...</span>
+              <span className="ml-2 hidden sm:inline">{t('select_location')}</span>
             )}
           </Button>
 
@@ -319,7 +328,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search products..."
+                  placeholder={t('search_placeholder') as string}
                   className="w-full appearance-none bg-background pl-8 pr-8 shadow-none"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
@@ -333,6 +342,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </form>
           </div>
           
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                    <Languages className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Language / भाषा</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={i18n.language} onValueChange={handleLanguageChange}>
+                    <DropdownMenuRadioItem value="en">{t('english')}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="mr">{t('marathi')}</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="hi">{t('hindi')}</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="relative rounded-full">
@@ -441,3 +467,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+export const AppShell = appWithTranslation(AppShellComponent, nextI18NextConfig);
