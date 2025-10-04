@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Select,
   SelectContent,
@@ -10,18 +11,46 @@ import {
 } from "@/components/ui/select"
 import { ItemCard } from "@/components/item-card"
 import { CategoryScroller } from "@/components/category-scroller"
-import { FilterPills } from '@/components/filter-pills';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, endAt, startAt } from 'firebase/firestore';
+import { collection, query, where, orderBy, endAt, startAt, limit } from 'firebase/firestore';
 import type { Item } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
-import { Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChevronRight, Package, Gift, Star } from 'lucide-react';
+import Image from 'next/image';
 
 interface DashboardPageProps {
   selectedLocality?: string;
   searchText?: string;
 }
+
+const ItemCarousel = ({ title, items, icon, viewAllHref }: { title: string, items: Item[], icon: React.ElementType, viewAllHref: string }) => {
+  const Icon = icon;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="flex items-center gap-2 font-headline text-2xl font-bold">
+          <Icon className="h-6 w-6" />
+          {title}
+        </h2>
+        <Button variant="link" asChild>
+          <Link href={viewAllHref}>See All <ChevronRight className="h-4 w-4" /></Link>
+        </Button>
+      </div>
+      <div className="relative">
+        <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+          {items.map(item => (
+            <div key={item.id} className="w-full min-w-[280px] sm:min-w-[300px] snap-start">
+              <ItemCard item={item} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 export default function DashboardPage({ selectedLocality, searchText }: DashboardPageProps) {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -29,14 +58,28 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
   const effectiveSearchText = searchText && searchText.length >= 3 ? searchText : '';
 
 
-  const itemsQuery = useMemoFirebase(() => {
-    // Defer the query until both firestore and selectedLocality are available.
+  const baseQuery = useMemoFirebase(() => {
     if (!firestore || !selectedLocality) return null;
-
-    let q = query(
+    return query(
       collection(firestore, "items"),
       where("locality", "==", selectedLocality)
     );
+  }, [firestore, selectedLocality]);
+
+  const featuredQuery = useMemoFirebase(() => {
+    if (!baseQuery) return null;
+    return query(baseQuery, where("isFeatured", "==", true), limit(10));
+  }, [baseQuery]);
+
+  const donationsQuery = useMemoFirebase(() => {
+    if (!baseQuery) return null;
+    return query(baseQuery, where("listingType", "==", "Donate"), limit(10));
+  }, [baseQuery]);
+  
+  const recommendationsQuery = useMemoFirebase(() => {
+    if (!baseQuery) return null;
+    
+    let q = query(baseQuery, orderBy("postedAt", "desc"));
 
     if (activeCategory !== 'all') {
       q = query(q, where("category", "==", activeCategory));
@@ -50,67 +93,107 @@ export default function DashboardPage({ selectedLocality, searchText }: Dashboar
             startAt(capitalizedSearchText),
             endAt(capitalizedSearchText + '\uf8ff')
         );
-    } else {
-        q = query(q, orderBy("postedAt", "desc"));
     }
-
+    
     return q;
-  }, [firestore, selectedLocality, activeCategory, effectiveSearchText]);
 
-  const { data: items, isLoading: areItemsLoading } = useCollection<Item>(itemsQuery);
+  }, [baseQuery, activeCategory, effectiveSearchText]);
 
-  const sortOptions = [
-    { value: "newest", label: "Newest" },
-    { value: "price-asc", label: "Price: Low to High" },
-    { value: "price-desc", label: "Price: High to Low" },
-    { value: "distance", label: "Nearest" },
-  ];
-  
+  const { data: featuredItems, isLoading: areFeaturedLoading } = useCollection<Item>(featuredQuery);
+  const { data: donationItems, isLoading: areDonationsLoading } = useCollection<Item>(donationsQuery);
+  const { data: recommendedItems, isLoading: areRecommendationsLoading } = useCollection<Item>(recommendationsQuery);
+
+
   const handleCategoryChange = (categorySlug: string) => {
     const categoryName = categorySlug === 'all' ? 'all' : categorySlug;
     setActiveCategory(categoryName);
   };
 
-  const isLoading = areItemsLoading || !selectedLocality;
-
-  const pageTitle = selectedLocality ? (activeCategory === 'all'
-    ? <>Browse Electronics in <span className="text-primary">{selectedLocality}</span></>
-    : <>{activeCategory} in <span className="text-primary">{selectedLocality}</span></>)
-    : "Loading Listings...";
-
+  const isLoading = areFeaturedLoading || areDonationsLoading || areRecommendationsLoading || !selectedLocality;
 
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <h1 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-          {pageTitle}
-        </h1>
+    <div className="space-y-8">
+      {/* Hero Section */}
+      <div className="relative aspect-[2/1] md:aspect-[3/1] w-full overflow-hidden rounded-xl bg-secondary">
+          <Image
+              src="https://images.unsplash.com/photo-1555864434-219a181d5b3c?w=1200"
+              alt="E-waste recycling"
+              fill
+              className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4">
+              <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold drop-shadow-md">
+                  Give Your Electronics a Second Life
+              </h1>
+              <p className="max-w-2xl mt-2 text-sm sm:text-base md:text-lg drop-shadow-sm">
+                  Join the Pune community in reducing e-waste. Buy, sell, or donate your used gadgets today.
+              </p>
+              <Button asChild size="lg" className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link href="/post">Post Your Item Now</Link>
+              </Button>
+          </div>
       </div>
-      
-      <div className='space-y-4'>
+
+      {/* Category Scroller */}
+      <div className='space-y-2'>
+        <h2 className="font-headline text-2xl font-bold">Browse by Category</h2>
         <CategoryScroller activeCategory={activeCategory} onCategoryChange={handleCategoryChange} />
-        <FilterPills sortOptions={sortOptions} />
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-             <Skeleton key={i} className="h-96 w-full" />
-          ))}
-        </div>
-      ) : items && items.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
+        <div className="space-y-8">
+            <div>
+              <Skeleton className="h-8 w-48 mb-4" />
+              <div className="flex space-x-4 overflow-x-auto pb-4">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96 w-full min-w-[280px]" />)}
+              </div>
+            </div>
+            <div>
+              <Skeleton className="h-8 w-48 mb-4" />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
+              </div>
+            </div>
         </div>
       ) : (
-        <EmptyState
-            icon={Package}
-            title="No Listings Found"
-            description={`There are currently no listings matching your criteria in ${selectedLocality}. Try another category or search term!`}
-        />
+        <>
+          {featuredItems && featuredItems.length > 0 && (
+            <ItemCarousel 
+              title="Featured Items" 
+              items={featuredItems} 
+              icon={Star}
+              viewAllHref="#"
+            />
+          )}
+
+          {donationItems && donationItems.length > 0 && (
+            <ItemCarousel 
+              title="Donations Corner"
+              items={donationItems}
+              icon={Gift}
+              viewAllHref="#"
+            />
+          )}
+
+          <div className="space-y-4">
+            <h2 className="font-headline text-2xl font-bold">Fresh Recommendations</h2>
+            {recommendedItems && recommendedItems.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {recommendedItems.map((item) => (
+                    <ItemCard key={item.id} item={item} />
+                ))}
+                </div>
+            ) : (
+                <EmptyState
+                    icon={Package}
+                    title="No Listings Found"
+                    description={`There are currently no listings matching your criteria in ${selectedLocality}. Try another category or search term!`}
+                />
+            )}
+          </div>
+        </>
       )}
-    </>
+    </div>
   )
 }

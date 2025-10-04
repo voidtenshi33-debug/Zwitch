@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown
+  Bell, Home, Heart, MessageSquare, Plus, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown, Star
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -187,8 +186,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   const loggedInUser = {
-      name: user?.displayName || "Anonymous",
-      avatarUrl: user?.photoURL || "",
+      name: userProfile?.displayName || user?.displayName || "Anonymous",
+      avatarUrl: userProfile?.photoURL || user?.photoURL || "",
+      rating: userProfile?.avgRating || 0
   }
 
   const isLoading = isUserLoading || isProfileLoading || !currentLocality;
@@ -227,11 +227,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Logo className={cn("text-2xl", !isSidebarOpen && "text-primary")} isDashboard as="span" />
-            <span className={cn("font-headline sr-only", isSidebarOpen && "lg:not-sr-only")}></span>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               <PanelLeft className={cn("h-4 w-4 transition-transform", !isSidebarOpen && "rotate-180")} />
             </Button>
           </div>
+          
+          {isSidebarOpen && (
+            <div className="px-4 py-2">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 border">
+                  <AvatarImage src={loggedInUser.avatarUrl} alt={loggedInUser.name} />
+                  <AvatarFallback>{getInitials(loggedInUser.name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{loggedInUser.name}</p>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                    <span>{loggedInUser.rating.toFixed(1)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <nav className={cn("flex flex-col items-start gap-2 px-2 text-sm font-medium lg:px-4", !isSidebarOpen && "items-center px-0 lg:px-0")}>
             {navItems.map((item) => (
               <Link
@@ -358,12 +376,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {childrenWithProps}
         </main>
 
-        <Button asChild size="lg" className="fixed bottom-6 right-6 rounded-full bg-accent shadow-lg transition-transform hover:scale-105 h-auto py-3 px-5">
-            <Link href="/post" className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                <span className="font-semibold">Sell</span>
-            </Link>
-        </Button>
       </div>
 
        <Dialog open={isListening} onOpenChange={setIsListening}>
