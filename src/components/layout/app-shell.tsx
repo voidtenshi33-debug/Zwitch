@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Bell, Home, Heart, MessageSquare, PlusSquare, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic
+  Bell, Home, Heart, MessageSquare, PlusSquare, User, Menu, Search, LogOut, Settings, PanelLeft, X, Mic, MapPin, ChevronDown
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
-import { notifications } from '@/lib/data';
+import { notifications, popularLocations } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { User as UserType } from '@/lib/types';
+
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Home' },
@@ -42,11 +47,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isMobileSheetOpen, setIsMobileSheetOpen] = React.useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const [searchText, setSearchText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [currentLocality, setCurrentLocality] = useState('Pune');
+  const [locationSearch, setLocationSearch] = useState('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // A real app would fetch this from user profile
+    if (user?.uid) {
+        // Here you would fetch the user profile from firestore
+        // and set the currentLocality from user.lastKnownLocality
+        // For now, we'll just set a default
+        setCurrentLocality('Kothrud');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -62,7 +84,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setSearchText(transcript);
-        // Automatically perform the search with the transcript
         performSearch(transcript);
       };
       recognitionRef.current = recognition;
@@ -75,7 +96,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         recognitionRef.current.start();
       } catch (error) {
         console.error("Speech recognition error:", error);
-        // Handle cases where recognition is already active or other errors
         setIsListening(false);
       }
     }
@@ -83,7 +103,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const performSearch = (query: string) => {
     console.log('Searching for:', query);
-    // In a real app, you would navigate to the search results page
     // router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 
@@ -92,6 +111,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
+  const handleSelectLocality = (locality: string) => {
+      setCurrentLocality(locality);
+      if (user) {
+        const userRef = doc(firestore, "users", user.uid);
+        setDocumentNonBlocking(userRef, { lastKnownLocality: locality }, { merge: true });
+      }
+      setIsLocationModalOpen(false);
+      // Here you would typically trigger a re-fetch of data for the new locality
+  };
+
+  const handleDetectLocation = () => {
+    setIsDetectingLocation(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            // In a real app, you would use a reverse geocoding service here
+            // to convert lat/lng to a locality.
+            // For this demo, we'll just pick a random one.
+            const randomLocality = popularLocations[Math.floor(Math.random() * popularLocations.length)];
+            handleSelectLocality(randomLocality);
+            setIsDetectingLocation(false);
+        },
+        (error) => {
+            if (error.code === error.PERMISSION_DENIED) {
+                setLocationError("Location access was denied. Please enable it in your browser settings.");
+            } else {
+                setLocationError("Could not determine your location. Please select it manually.");
+            }
+            setIsDetectingLocation(false);
+        }
+    );
+  };
+
+  const filteredLocations = popularLocations.filter(loc => 
+    loc.toLowerCase().includes(locationSearch.toLowerCase())
+  );
+
   const loggedInUser = {
       name: user?.displayName || "Anonymous",
       avatarUrl: user?.photoURL || "",
@@ -106,7 +162,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // Or redirect to login page
      if (typeof window !== 'undefined') {
       router.push('/login');
     }
@@ -186,6 +241,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
 
+          <Button variant="ghost" className="shrink-0" onClick={() => setIsLocationModalOpen(true)}>
+            <MapPin className="h-5 w-5" />
+            <span className="ml-2 hidden sm:inline">{currentLocality}, Pune</span>
+            <ChevronDown className="ml-1 h-4 w-4" />
+          </Button>
+
           <div className="w-full flex-1">
             <form onSubmit={(e) => { e.preventDefault(); performSearch(searchText); }}>
               <div className="relative">
@@ -193,7 +254,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Input
                   type="search"
                   placeholder="Search products..."
-                  className="w-full appearance-none bg-background pl-8 pr-8 shadow-none md:w-2/3 lg:w-1/3"
+                  className="w-full appearance-none bg-background pl-8 pr-8 shadow-none"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                 />
@@ -279,6 +340,53 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-center p-8">
             <Mic className="h-16 w-16 text-primary animate-pulse" />
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isLocationModalOpen} onOpenChange={setIsLocationModalOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Select Your Location</DialogTitle>
+                <DialogDescription>
+                    Browse listings from your preferred locality in Pune.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search for a locality..."
+                    className="pl-8"
+                    value={locationSearch}
+                    onChange={(e) => setLocationSearch(e.target.value)}
+                />
+            </div>
+            <div className="space-y-2">
+                <Button variant="outline" className="w-full justify-start" onClick={handleDetectLocation} disabled={isDetectingLocation}>
+                    <MapPin className="mr-2 h-4 w-4" />
+                    {isDetectingLocation ? 'Detecting your location...' : 'Use current location'}
+                </Button>
+                {locationError && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Location Error</AlertTitle>
+                        <AlertDescription>{locationError}</AlertDescription>
+                    </Alert>
+                )}
+            </div>
+            <div className="flex-1 overflow-y-auto max-h-60 pr-2 -mr-4">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Popular Locations</p>
+                <div className="space-y-1">
+                    {filteredLocations.map(loc => (
+                        <Button
+                            key={loc}
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => handleSelectLocality(loc)}
+                        >
+                            {loc}
+                        </Button>
+                    ))}
+                </div>
+            </div>
         </DialogContent>
       </Dialog>
     </div>

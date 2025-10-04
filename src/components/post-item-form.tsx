@@ -30,6 +30,7 @@ import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
 import { generateListingTitle } from "@/ai/flows/generate-listing-title"
 import { suggestItemCategories } from "@/ai/flows/suggest-item-categories"
 import { categories } from "@/lib/categories"
+import { popularLocations } from "@/lib/data"
 import type { ItemCondition, ListingType } from "@/lib/types"
 
 const formSchema = z.object({
@@ -39,6 +40,7 @@ const formSchema = z.object({
   condition: z.string().min(1, "Please select the item's condition."),
   listingType: z.enum(["Sell", "Donate", "Spare Parts"]),
   price: z.string().optional(),
+  locality: z.string().min(1, "Please select your locality."),
   images: z.array(z.any()).min(1, "Please upload at least one image."),
 }).refine(data => {
     if (data.listingType === "Sell") {
@@ -68,6 +70,7 @@ export function PostItemForm() {
       condition: "",
       listingType: "Sell",
       price: "",
+      locality: "",
       images: [],
     },
   })
@@ -288,6 +291,30 @@ export function PostItemForm() {
                     {conditions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="locality"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Locality</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your locality in Pune" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {popularLocations.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                 <FormDescription>
+                This helps local buyers find your item.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

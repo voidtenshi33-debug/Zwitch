@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Heart } from "lucide-react"
+import { Heart, MapPin } from "lucide-react"
 
 import type { Item } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -53,8 +53,9 @@ export function ItemCard({ item }: ItemCardProps) {
           </Link>
         </CardTitle>
       </CardContent>
-      <CardFooter className="p-4 pt-0 text-sm text-muted-foreground">
-        <p>{item.location}</p>
+      <CardFooter className="p-4 pt-0 text-sm text-muted-foreground flex items-center">
+        <MapPin className="h-4 w-4 mr-1"/>
+        <span>{item.locality}</span>
         <p className="ml-auto">{item.postedAt}</p>
       </CardFooter>
     </Card>

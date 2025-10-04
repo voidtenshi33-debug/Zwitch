@@ -9,9 +9,9 @@ const findImage = (id: string) => {
 };
 
 export const users: User[] = [
-  { id: 'user-1', name: 'Alex Doe', avatarUrl: findImage('avatar-1').imageUrl, joinDate: '2023-05-15', avgRating: 4.8, itemsRecycled: 12 },
-  { id: 'user-2', name: 'Jane Smith', avatarUrl: findImage('avatar-2').imageUrl, joinDate: '2022-11-20', avgRating: 4.9, itemsRecycled: 25 },
-  { id: 'user-3', name: 'Ben Starr', avatarUrl: findImage('avatar-3').imageUrl, joinDate: '2024-01-10', avgRating: 4.5, itemsRecycled: 5 },
+  { id: 'user-1', name: 'Alex Doe', avatarUrl: findImage('avatar-1').imageUrl, joinDate: '2023-05-15', avgRating: 4.8, itemsRecycled: 12, lastKnownLocality: 'Kothrud' },
+  { id: 'user-2', name: 'Jane Smith', avatarUrl: findImage('avatar-2').imageUrl, joinDate: '2022-11-20', avgRating: 4.9, itemsRecycled: 25, lastKnownLocality: 'Viman Nagar' },
+  { id: 'user-3', name: 'Ben Starr', avatarUrl: findImage('avatar-3').imageUrl, joinDate: '2024-01-10', avgRating: 4.5, itemsRecycled: 5, lastKnownLocality: 'Koregaon Park' },
 ];
 
 export const loggedInUser = users[0];
@@ -31,7 +31,8 @@ export const items: Item[] = [
     image: findImage('item-laptop'),
     seller: users[1],
     postedAt: '2 days ago',
-    location: 'San Francisco, CA'
+    location: 'Viman Nagar, Pune',
+    locality: 'Viman Nagar'
   },
   {
     id: 'item-2',
@@ -44,7 +45,8 @@ export const items: Item[] = [
     image: findImage('item-phone'),
     seller: users[2],
     postedAt: '5 hours ago',
-    location: 'Oakland, CA'
+    location: 'Koregaon Park, Pune',
+    locality: 'Koregaon Park'
   },
   {
     id: 'item-3',
@@ -57,7 +59,8 @@ export const items: Item[] = [
     image: findImage('item-keyboard'),
     seller: users[0],
     postedAt: '1 week ago',
-    location: 'San Francisco, CA'
+    location: 'Kothrud, Pune',
+    locality: 'Kothrud'
   },
   {
     id: 'item-4',
@@ -70,7 +73,8 @@ export const items: Item[] = [
     image: findImage('item-camera'),
     seller: users[1],
     postedAt: '3 days ago',
-    location: 'Berkeley, CA'
+    location: 'Deccan Gymkhana, Pune',
+    locality: 'Deccan Gymkhana'
   },
   {
     id: 'item-5',
@@ -83,7 +87,8 @@ export const items: Item[] = [
     image: findImage('item-headphones'),
     seller: users[2],
     postedAt: '1 day ago',
-    location: 'San Mateo, CA'
+    location: 'Pimpri-Chinchwad, Pune',
+    locality: 'Pimpri-Chinchwad'
   },
   {
     id: 'item-6',
@@ -96,7 +101,8 @@ export const items: Item[] = [
     image: findImage('item-drone'),
     seller: users[0],
     postedAt: '4 days ago',
-    location: 'San Francisco, CA'
+    location: 'Kothrud, Pune',
+    locality: 'Kothrud'
   },
   {
     id: 'item-7',
@@ -109,7 +115,8 @@ export const items: Item[] = [
     image: findImage('item-tablet'),
     seller: users[1],
     postedAt: '6 days ago',
-    location: 'Palo Alto, CA'
+    location: 'Hinjawadi, Pune',
+    locality: 'Hinjawadi'
   },
   {
     id: 'item-8',
@@ -122,7 +129,8 @@ export const items: Item[] = [
     image: findImage('item-monitor'),
     seller: users[2],
     postedAt: '2 weeks ago',
-    location: 'Daly City, CA'
+    location: 'Hadapsar, Pune',
+    locality: 'Hadapsar'
   },
 ];
 
@@ -145,3 +153,18 @@ export const notifications: Notification[] = [
 ];
 
 export const categories = ['Computers', 'Phones', 'Accessories', 'Cameras', 'Audio', 'Drones', 'Monitors', 'Gaming', 'TV & Home Theater'];
+
+export const popularLocations = [
+    'Kothrud',
+    'Viman Nagar',
+    'Koregaon Park',
+    'Deccan Gymkhana',
+    'Pimpri-Chinchwad',
+    'Hadapsar',
+    'Hinjawadi',
+    'Aundh',
+    'Baner',
+    'Wakad',
+    'Kharadi',
+    'Camp',
+];
