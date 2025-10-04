@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -285,7 +286,7 @@ export function PostItemForm() {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the item's condition" />
-                    </Trigger>
+                    </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {conditions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -306,7 +307,7 @@ export function PostItemForm() {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your locality in Pune" />
-                    </Trigger>
+                    </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {popularLocations.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
@@ -384,3 +385,5 @@ export function PostItemForm() {
     </Form>
   )
 }
+
+    
