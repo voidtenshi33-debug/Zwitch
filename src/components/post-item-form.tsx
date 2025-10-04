@@ -33,7 +33,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { ImagePlus, Loader2, Sparkles, X } from "lucide-react"
 import { generateListingDescription } from "@/ai/flows/generate-listing-description"
-import { generateListingTitle } from "@/ai/flows/generate-listing-title"
 import { suggestItemCategories } from "@/ai/flows/suggest-item-categories"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
@@ -83,7 +82,6 @@ export function PostItemForm() {
   const { user: authUser } = useUser()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isDescriptionGenerating, setIsDescriptionGenerating] = React.useState(false)
-  const [isTitleGenerating, setIsTitleGenerating] = React.useState(false)
   const [isCategoryGenerating, setIsCategoryGenerating] = React.useState(false)
   const [suggestedCategories, setSuggestedCategories] = React.useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
@@ -234,29 +232,6 @@ export function PostItemForm() {
     }
   };
 
-  const handleGenerateTitle = async () => {
-    const description = form.getValues("description");
-    if (!description || description.length < 20) {
-      toast({ variant: "destructive", title: "Please write a short description for your gadget first." });
-      return;
-    }
-    setIsTitleGenerating(true);
-    try {
-        const images = form.getValues("images");
-        let photoDataUri;
-        if (images.length > 0) {
-            photoDataUri = await fileToDataUri(images[0]);
-        }
-        const result = await generateListingTitle({ description, photoDataUri });
-        form.setValue("title", result.title, { shouldValidate: true });
-    } catch (error) {
-        console.error(error);
-        toast({ variant: "destructive", title: "Error", description: "Could not generate a title." });
-    } finally {
-        setIsTitleGenerating(false);
-    }
-  };
-
   const handleSuggestCategories = async () => {
     const description = form.getValues("description");
      if (!description || description.length < 20) {
@@ -331,10 +306,6 @@ export function PostItemForm() {
                 <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating || isSubmitting}>
                   {isDescriptionGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Generate Description
-                </Button>
-                 <Button type="button" variant="outline" size="sm" onClick={handleGenerateTitle} disabled={isTitleGenerating || isSubmitting}>
-                  {isTitleGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Generate Title
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={handleSuggestCategories} disabled={isCategoryGenerating || isSubmitting}>
                   {isCategoryGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
@@ -500,5 +471,3 @@ export function PostItemForm() {
     </Form>
   )
 }
-
-    
