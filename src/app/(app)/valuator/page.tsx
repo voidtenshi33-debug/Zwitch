@@ -98,6 +98,8 @@ export default function ValuatorPage() {
     const params = new URLSearchParams();
     params.set('title', result.suggestedTitle);
     params.set('category', result.suggestedCategory);
+    params.set('minPrice', result.estimatedMinValue.toString());
+    params.set('maxPrice', result.estimatedMaxValue.toString());
     router.push(`/post?${params.toString()}`);
   }
 

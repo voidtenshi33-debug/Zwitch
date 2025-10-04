@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { collection, addDoc, Timestamp } from "firebase/firestore"
@@ -36,6 +36,7 @@ import { generateListingDescription } from "@/ai/flows/generate-listing-descript
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
 import { useFirestore, useUser } from "@/firebase"
+import { Slider } from "./ui/slider"
 
 const popularLocations = [
     'Kothrud',
@@ -58,12 +59,12 @@ const formSchema = z.object({
   category: z.string().min(1, "Please select a category."),
   condition: z.string().min(1, "Please select the item's condition."),
   listingType: z.enum(["Sell", "Donate", "Spare Parts"]),
-  price: z.string().optional(),
+  price: z.number().optional(),
   locality: z.string().min(1, "Please select your locality."),
   images: z.array(z.instanceof(File)).min(1, "Please upload at least one image."),
 }).refine(data => {
     if (data.listingType === "Sell") {
-        return data.price && !isNaN(parseFloat(data.price)) && parseFloat(data.price) > 0;
+        return data.price !== undefined && data.price > 0;
     }
     return true;
 }, {
@@ -82,6 +83,11 @@ export function PostItemForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isDescriptionGenerating, setIsDescriptionGenerating] = React.useState(false)
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
+  
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,7 +97,7 @@ export function PostItemForm() {
       category: searchParams.get('category') || "",
       condition: "",
       listingType: "Sell",
-      price: "",
+      price: undefined,
       locality: "",
       images: [],
     },
@@ -100,11 +106,19 @@ export function PostItemForm() {
   useEffect(() => {
     const title = searchParams.get('title');
     const category = searchParams.get('category');
-    if (title) {
-        form.setValue('title', title);
-    }
-    if (category) {
-        form.setValue('category', category);
+    const minPriceParam = searchParams.get('minPrice');
+    const maxPriceParam = searchParams.get('maxPrice');
+
+    if (title) form.setValue('title', title);
+    if (category) form.setValue('category', category);
+    if (minPriceParam && maxPriceParam) {
+        const min = parseInt(minPriceParam, 10);
+        const max = parseInt(maxPriceParam, 10);
+        setMinPrice(min);
+        setMaxPrice(max);
+        const initialPrice = Math.round((min + max) / 2);
+        setSelectedPrice(initialPrice);
+        form.setValue('price', initialPrice);
     }
   }, [searchParams, form]);
   
@@ -138,7 +152,7 @@ export function PostItemForm() {
             category: values.category,
             condition: values.condition,
             listingType: values.listingType,
-            price: values.listingType === 'Sell' ? parseFloat(values.price!) : 0,
+            price: values.listingType === 'Sell' ? values.price : 0,
             locality: values.locality,
             imageUrls: imageUrls,
             ownerId: authUser.uid,
@@ -227,6 +241,11 @@ export function PostItemForm() {
     } finally {
         setIsDescriptionGenerating(false);
     }
+  };
+  
+  const handlePriceChange = (value: number[]) => {
+      setSelectedPrice(value[0]);
+      form.setValue('price', value[0]);
   };
 
   return (
@@ -409,13 +428,44 @@ export function PostItemForm() {
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price</FormLabel>
-                <FormControl>
-                    <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                        <Input type="number" placeholder="2500" className="pl-7" {...field} disabled={isSubmitting} />
-                    </div>
-                </FormControl>
+                <div className="flex justify-between items-center">
+                    <FormLabel>Price</FormLabel>
+                    {selectedPrice !== null && <span className="font-bold text-lg text-primary">₹{selectedPrice.toLocaleString('en-IN')}</span>}
+                </div>
+                {minPrice !== null && maxPrice !== null && selectedPrice !== null ? (
+                    <>
+                        <FormControl>
+                            <Slider
+                                min={minPrice}
+                                max={maxPrice}
+                                step={Math.max(1, Math.round((maxPrice - minPrice) / 100))}
+                                value={[selectedPrice]}
+                                onValueChange={handlePriceChange}
+                                disabled={isSubmitting}
+                            />
+                        </FormControl>
+                        <FormDescription>
+                            We've suggested a price range based on the AI valuation. Adjust it to your liking.
+                        </FormDescription>
+                    </>
+                ) : (
+                    <FormControl>
+                        <div className="relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
+                            <Input 
+                                type="number" 
+                                placeholder="2500" 
+                                className="pl-7" 
+                                value={field.value ?? ''}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    field.onChange(val === '' ? undefined : parseFloat(val));
+                                }}
+                                disabled={isSubmitting} 
+                            />
+                        </div>
+                    </FormControl>
+                )}
                 <FormMessage />
               </FormItem>
             )}
