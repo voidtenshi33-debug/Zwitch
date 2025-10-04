@@ -16,7 +16,7 @@ export type User = {
 
 export type ItemCondition = 'New' | 'Used - Like New' | 'Used - Good' | 'Needs Minor Repair' | 'For Spare Parts' | 'Working' | 'For Parts Only';
 export type ListingType = 'Sell' | 'Donate' | 'Spare Parts';
-export type ItemStatus = 'Available' | 'Sold' | 'Recycled';
+export type ItemStatus = 'Available' | 'Sold' | 'Recycled' | 'Reserved';
 
 export type Item = {
   id: string;
@@ -68,7 +68,7 @@ export type Notification = {
     type: 'chat' | 'status' | 'admin' | 'recycle';
     text: string;
     timestamp: string;
-    isRead: boolean;
+isRead: boolean;
     href: string;
 };
 
