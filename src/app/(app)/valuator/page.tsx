@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from "next/image";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,31 +14,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Sparkles, Tag, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, Tag, ArrowRight, ImagePlus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 const valuatorFormSchema = z.object({
   deviceType: z.string().min(1, 'Please select a device type.'),
   model: z.string().min(2, 'Please enter a model name.'),
-  condition: z.string().min(10, 'Please describe the condition briefly.'),
+  images: z.array(z.instanceof(File)).min(1, "Please upload at least one image showing the item's condition.").max(3, "You can upload a maximum of 3 images."),
 });
 
 const deviceTypes = ["Mobile Phone", "Laptop", "Tablet", "Smartwatch", "Headphones", "Camera", "Other"];
+
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+  });
+};
 
 export default function ValuatorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DeviceValuatorOutput | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
 
   const form = useForm<z.infer<typeof valuatorFormSchema>>({
     resolver: zodResolver(valuatorFormSchema),
     defaultValues: {
       deviceType: '',
       model: '',
-      condition: '',
+      images: [],
     },
   });
 
@@ -45,7 +55,13 @@ export default function ValuatorPage() {
     setIsLoading(true);
     setResult(null);
     try {
-      const valuationResult = await deviceValuator(values);
+      const photoDataUris = await Promise.all(values.images.map(fileToDataUri));
+
+      const valuationResult = await deviceValuator({
+        deviceType: values.deviceType,
+        model: values.model,
+        photoDataUris: photoDataUris,
+      });
       setResult(valuationResult);
     } catch (error) {
       console.error('Error getting valuation:', error);
@@ -66,6 +82,27 @@ export default function ValuatorPage() {
     params.set('category', result.suggestedCategory);
     router.push(`/post?${params.toString()}`);
   }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+        const files = Array.from(e.target.files);
+        const currentImageCount = imagePreviews.length;
+        if (currentImageCount + files.length > 3) {
+            toast({ variant: 'destructive', title: 'Too many images', description: 'You can upload a maximum of 3 images.' });
+            return;
+        }
+        form.setValue("images", [...form.getValues("images"), ...files]);
+        const newPreviews = files.map(file => URL.createObjectURL(file));
+        setImagePreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    const currentImages = form.getValues("images");
+    currentImages.splice(index, 1);
+    form.setValue("images", currentImages);
+  };
 
 
   if (isLoading) {
@@ -106,7 +143,7 @@ export default function ValuatorPage() {
             <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleListNow}>
                 List this item now! <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button variant="outline" className="w-full" onClick={() => setResult(null)}>
+            <Button variant="outline" className="w-full" onClick={() => { setResult(null); form.reset(); setImagePreviews([]); }}>
                 Value Another Item
             </Button>
         </CardFooter>
@@ -122,7 +159,7 @@ export default function ValuatorPage() {
             AI Device Valuator
         </CardTitle>
         <CardDescription>
-          Find out what your old, forgotten electronics are worth. Just provide a few details to get started.
+          Find out what your old, forgotten electronics are worth. Just provide a few details and some photos to get started.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -167,12 +204,29 @@ export default function ValuatorPage() {
 
             <FormField
               control={form.control}
-              name="condition"
+              name="images"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Condition</FormLabel>
+                  <FormLabel>Condition Photos (up to 3)</FormLabel>
+                  <FormDescription>Upload clear photos of the front, back, and any specific damage.</FormDescription>
                   <FormControl>
-                    <Textarea placeholder="e.g., Screen has a small crack in the corner, but it turns on and works fine. Battery health is around 80%." {...field} />
+                    <div className="grid grid-cols-3 gap-4">
+                      {imagePreviews.map((src, index) => (
+                          <div key={index} className="relative aspect-square">
+                              <Image src={src} alt={`Preview ${index+1}`} fill className="rounded-md object-cover" />
+                              <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(index)}>
+                                  <X className="h-4 w-4" />
+                              </Button>
+                          </div>
+                      ))}
+                      {imagePreviews.length < 3 && (
+                        <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                            <ImagePlus className="h-8 w-8" />
+                            <span className="mt-2 text-xs text-center">Add Photo</span>
+                            <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isLoading} />
+                        </label>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

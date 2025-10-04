@@ -1,9 +1,9 @@
 'use server';
 
 /**
- * @fileOverview An AI flow to estimate the value of a used electronic device.
+ * @fileOverview An AI flow to estimate the value of a used electronic device by analyzing its images.
  *
- * - deviceValuator - A function that provides a valuation and recommendation.
+ * - deviceValuator - A function that provides a valuation and recommendation based on images.
  * - DeviceValuatorInput - The input type for the deviceValuator function.
  * - DeviceValuatorOutput - The return type for the deviceValuator function.
  */
@@ -14,7 +14,9 @@ import { z } from 'genkit';
 const DeviceValuatorInputSchema = z.object({
   deviceType: z.string().describe('The type of device (e.g., "Mobile Phone", "Laptop").'),
   model: z.string().describe('The specific model of the device (e.g., "Apple iPhone 11").'),
-  condition: z.string().describe('The condition of the device (e.g., "Screen cracked", "Turns on").'),
+  photoDataUris: z.array(z.string()).describe(
+    "A set of photos of a device, as data URIs that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'. The images should show the device from multiple angles, including any damage."
+  ),
 });
 export type DeviceValuatorInput = z.infer<typeof DeviceValuatorInputSchema>;
 
@@ -37,18 +39,22 @@ const prompt = ai.definePrompt({
   output: { schema: DeviceValuatorOutputSchema },
   prompt: `You are an expert evaluator for a second-hand electronics marketplace in India. Your currency is Indian Rupees (INR).
 
-  A user wants to know the value of their old device. Based on the provided details, you must provide a realistic resale price range, a clear recommendation on what to do with it, a suggested listing title, and a category.
+  A user wants to know the value of their old device. Based on the provided images and device details, you must diagnose the item's condition, provide a realistic resale price range, a clear recommendation, a suggested listing title, and a category.
 
-  - If the value is very low, recommend donating or selling for spare parts.
+  - Analyze the images to determine the physical condition (e.g., screen cracks, scratches, overall wear).
+  - If the value is very low based on the visible condition, recommend donating or selling for spare parts.
   - If the value is decent, recommend selling it.
-  - The suggested title should be clear and include the model and condition.
+  - The suggested title should be clear and include the model and an inferred condition (e.g., "Used - Good", "Screen Damaged").
 
   Device Type: {{{deviceType}}}
   Model: {{{model}}}
-  Condition: {{{condition}}}
-
+  {{#each photoDataUris}}
+  Photo: {{media url=this}}
+  {{/each}}
+  
   Provide your response in the specified JSON format.`,
 });
+
 
 const deviceValuatorFlow = ai.defineFlow(
   {
