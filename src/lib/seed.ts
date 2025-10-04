@@ -1,3 +1,4 @@
+
 // IMPORTANT: This file is used to seed the database with sample data.
 // It is designed to run only once.
 
@@ -38,9 +39,9 @@ const sampleItems = [
       ownerId: "user_02",
       ownerName: "Anjali Sharma",
       ownerAvatarUrl: "https://i.pravatar.cc/150?u=anjali",
-      ownerRating": 4.9,
+      ownerRating: 4.9,
       status: "Available",
-      isFeatured": true,
+      isFeatured: true,
     },
     {
       title: "Logitech Mechanical Gaming Keyboard",
@@ -60,11 +61,11 @@ const sampleItems = [
     },
     {
       title: "Samsung 24-inch Monitor (for parts)",
-      description": "The monitor does not turn on. Might be an issue with the power supply. The screen panel itself is not cracked. Good for someone who can repair it or use it for spare parts.",
+      description: "The monitor does not turn on. Might be an issue with the power supply. The screen panel itself is not cracked. Good for someone who can repair it or use it for spare parts.",
       category: "Monitors",
       condition: "For Spare Parts",
       listingType: "Donate",
-      price": 0,
+      price: 0,
       imageUrls: ["https://images.unsplash.com/photo-1586221434133-28b3a03358c5"],
       locality: "Viman Nagar",
       ownerId: "user_02",
@@ -78,13 +79,13 @@ const sampleItems = [
       title: "Box of Assorted Cables and Chargers",
       description: "Includes various USB-A, Micro USB, and Aux cables. A few old phone chargers also included. All free for anyone who needs them.",
       category: "Chargers & Cables",
-      condition": "Working",
+      condition: "Working",
       listingType: "Donate",
       price: 0,
       imageUrls: ["https://images.unsplash.com/photo-1585761994264-0a37397b9148"],
       locality: "Kothrud",
       ownerId: "user_01",
-      ownerName": "Rohan Kumar",
+      ownerName: "Rohan Kumar",
       ownerAvatarUrl: "https://i.pravatar.cc/150?u=rohan",
       ownerRating: 4.8,
       status: "Available",
@@ -120,7 +121,7 @@ const sampleItems = [
         ownerAvatarUrl: null,
         ownerRating: 4.5,
         status: "Available",
-        isFeatured": false
+        isFeatured: false
     }
 ];
 
