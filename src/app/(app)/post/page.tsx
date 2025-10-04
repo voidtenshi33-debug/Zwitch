@@ -1,5 +1,7 @@
+
 import { PostItemForm } from "@/components/post-item-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Suspense } from "react";
 
 export default function PostItemPage() {
   return (
@@ -10,7 +12,9 @@ export default function PostItemPage() {
             <CardDescription>List your old electronics to sell, donate, or recycle.</CardDescription>
           </CardHeader>
           <CardContent>
-            <PostItemForm />
+            <Suspense fallback={<div>Loading form...</div>}>
+              <PostItemForm />
+            </Suspense>
           </CardContent>
         </Card>
     </div>

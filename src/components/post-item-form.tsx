@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import React, { useEffect, useState, Suspense } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { collection, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -31,7 +32,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { ImagePlus, Loader2, Sparkles, X, Camera } from "lucide-react"
+import { ImagePlus, Loader2, Sparkles, X, Camera, Tag, ArrowRight } from "lucide-react"
 import { generateListingDescription } from "@/ai/flows/generate-listing-description"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
@@ -39,6 +40,7 @@ import { useFirestore, useUser } from "@/firebase"
 import { Slider } from "./ui/slider"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CameraCapture } from '@/components/camera-capture';
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert"
 
 const popularLocations = [
     'Kothrud',
@@ -275,6 +277,19 @@ function PostItemFormContent() {
     <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <Alert className="bg-accent/10 border-accent/30">
+          <Tag className="h-4 w-4 text-accent" />
+          <AlertTitle className="text-accent">Unsure of the value?</AlertTitle>
+          <AlertDescription className="flex justify-between items-center">
+            <span className="text-accent/90">Let our AI Valuator suggest a price.</span>
+            <Button variant="link" className="text-accent" asChild>
+              <Link href="/valuator">
+                Use AI Valuator <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+
         <FormField
           control={form.control}
           name="images"
@@ -563,6 +578,3 @@ export function PostItemForm() {
     </Suspense>
   )
 }
-
-    
-    
