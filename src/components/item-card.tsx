@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, MapPin, ShieldCheck, Star } from "lucide-react"
 import { formatDistanceToNow } from 'date-fns';
+import type { Timestamp } from 'firebase/firestore';
 
 import type { Item } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -28,9 +29,10 @@ function getInitials(name: string | null | undefined) {
 
 export function ItemCard({ item }: ItemCardProps) {
 
-  const postedAt = typeof item.postedAt === 'string' 
-    ? item.postedAt 
-    : item.postedAt?.toDate ? formatDistanceToNow(item.postedAt.toDate(), { addSuffix: true }) : 'Just now';
+  const postedAt = item.postedAt
+    ? formatDistanceToNow((item.postedAt as Timestamp).toDate(), { addSuffix: true })
+    : 'Just now';
+
 
   return (
     <Card className="flex h-full flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-lg">

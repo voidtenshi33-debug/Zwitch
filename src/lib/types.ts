@@ -32,7 +32,7 @@ export type Item = {
   ownerRating: number;
   status: ItemStatus;
   isFeatured: boolean;
-  postedAt: Timestamp | string; // Can be a timestamp or a string like "2 days ago"
+  postedAt: Timestamp;
 };
 
 
