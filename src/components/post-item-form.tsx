@@ -57,6 +57,7 @@ const popularLocations = [
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
+  brand: z.string().min(1, "Please enter the brand name."),
   description: z.string().min(20, "Description must be at least 20 characters long."),
   category: z.string().min(1, "Please select a category."),
   condition: z.string().min(1, "Please select the item's condition."),
@@ -96,6 +97,7 @@ export function PostItemForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: searchParams.get('title') || "",
+      brand: "",
       description: "",
       category: searchParams.get('category') || "",
       condition: "",
@@ -151,6 +153,7 @@ export function PostItemForm() {
         
         await addDoc(collection(firestore, "items"), {
             title: values.title,
+            brand: values.brand,
             description: values.description,
             category: values.category,
             condition: values.condition,
@@ -303,6 +306,20 @@ export function PostItemForm() {
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="brand"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Brand</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>

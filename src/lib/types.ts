@@ -20,6 +20,7 @@ export type ItemStatus = 'Available' | 'Sold' | 'Recycled';
 export type Item = {
   id: string;
   title: string;
+  brand: string;
   description: string;
   price: number;
   category: string;
