@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
@@ -30,6 +31,7 @@ import { User as UserType } from '@/lib/types';
 const getNavItems = (t: Function) => [
   { href: '/dashboard', icon: Home, label: t('home') },
   { href: '/chat', icon: MessageSquare, label: t('chats') },
+  { href: '/post', icon: Plus, label: t('sell'), isPrimary: true },
   { href: '/wishlist', icon: Heart, label: t('wishlist') },
   { href: '/profile', icon: User, label: t('profile') },
 ];
@@ -261,7 +263,31 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
           )}
 
           <nav className={cn("flex flex-col items-start gap-2 px-2 text-sm font-medium lg:px-4", !isSidebarOpen && "items-center px-0 lg:px-0")}>
-            {navItems.map((item) => (
+            {navItems.map((item) => {
+                if (item.isPrimary) {
+                  return (
+                    isSidebarOpen ? (
+                      <Button asChild className="w-full mt-2" key={item.label}>
+                         <Link href={item.href}>
+                          <item.icon className="h-4 w-4 mr-2" />
+                           {item.label}
+                         </Link>
+                      </Button>
+                    ) : (
+                      <Link
+                          key={item.label}
+                          href={item.href}
+                          className={cn(
+                          "flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-primary-foreground bg-primary transition-all hover:bg-primary/90 mt-2",
+                          )}
+                          title={item.label}
+                      >
+                          <item.icon className="h-4 w-4" />
+                      </Link>
+                    )
+                  )
+                }
+              return (
               <Link
                 key={item.label}
                 href={item.href}
@@ -275,7 +301,7 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
                 <item.icon className="h-4 w-4" />
                 <span className={cn(isSidebarOpen ? "" : "sr-only")}>{item.label}</span>
               </Link>
-            ))}
+            )})}
           </nav>
         </div>
       </aside>
@@ -293,7 +319,9 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="flex flex-col">
               <nav className="grid gap-2 text-lg font-medium">
                 <Logo isDashboard />
-                {navItems.map((item) => (
+                {navItems.map((item) => {
+                  if (item.isPrimary) return null; // Don't show in side sheet
+                  return (
                   <Link
                     key={item.label}
                     href={item.href}
@@ -306,7 +334,7 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
                     <item.icon className="h-5 w-5" />
                     {item.label}
                   </Link>
-                ))}
+                )})}
               </nav>
             </SheetContent>
           </Sheet>
@@ -399,9 +427,42 @@ function AppShellComponent({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </header>
 
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background overflow-auto">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background overflow-auto md:pb-24">
           {childrenWithProps}
         </main>
+
+        {/* Mobile Bottom Nav */}
+        <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
+            <nav className="grid grid-cols-5 items-center justify-items-center h-16 px-2">
+                {navItems.map(item => {
+                    const isPrimary = item.isPrimary;
+                    const isActive = pathname === item.href;
+
+                    if (isPrimary) {
+                        return (
+                            <div key={item.label} className="-mt-8">
+                                <Button asChild size="lg" className="rounded-full h-16 w-16 shadow-lg bg-accent text-accent-foreground hover:bg-accent/90">
+                                    <Link href={item.href} className="flex flex-col items-center justify-center">
+                                        <item.icon className="h-6 w-6" />
+                                        <span className="sr-only">{item.label}</span>
+                                    </Link>
+                                </Button>
+                            </div>
+                        )
+                    }
+
+                    return (
+                        <Link key={item.label} href={item.href} className={cn(
+                            "flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors w-full h-full",
+                            isActive && "text-primary"
+                        )}>
+                            <item.icon className="h-5 w-5" />
+                            <span className="text-xs">{item.label}</span>
+                        </Link>
+                    )
+                })}
+            </nav>
+        </footer>
 
       </div>
 

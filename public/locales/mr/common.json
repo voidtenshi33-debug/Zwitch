@@ -1,11 +1,15 @@
+
 {
-    "search_placeholder": "उत्पादने शोधा...",
-    "select_location": "स्थान निवडा...",
-    "home": "होम",
-    "chats": "चॅट्स",
-    "wishlist": "विशलिस्ट",
-    "profile": "प्रोफाइल",
-    "english": "इंग्रजी",
-    "marathi": "मराठी",
-    "hindi": "हिंदी"
+  "post_item": "आयटम पोस्ट करा",
+  "my_wishlist": "माझी विशलिस्ट",
+  "search_placeholder": "उत्पादने शोधा...",
+  "select_location": "स्थान निवडा",
+  "home": "होम",
+  "chats": "चॅट्स",
+  "wishlist": "विशलिस्ट",
+  "profile": "प्रोफाइल",
+  "sell": "विक्री",
+  "english": "इंग्रजी",
+  "marathi": "मराठी",
+  "hindi": "हिंदी"
 }
