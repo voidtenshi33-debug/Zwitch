@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -34,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { ImagePlus, Loader2, Sparkles, X, Camera, Tag, ArrowRight } from "lucide-react"
 import { generateListingDescription } from "@/ai/flows/generate-listing-description"
-import { deviceValuator } from "@/ai/flows/device-valuator-flow"
+import { deviceValuator, type DeviceValuatorOutput } from "@/ai/flows/device-valuator-flow"
 import { categories } from "@/lib/categories"
 import type { ItemCondition, ListingType } from "@/lib/types"
 import { useFirestore, useUser } from "@/firebase"
@@ -60,7 +61,7 @@ const popularLocations = [
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
-  brand: z.string().min(1, "Please enter the brand name."),
+  brand: z.string().min(1, "Please enter the brand name.").optional(),
   description: z.string().min(20, "Description must be at least 20 characters long."),
   category: z.string().min(1, "Please select a category."),
   condition: z.string().min(1, "Please select the item's condition."),
@@ -89,7 +90,14 @@ const fileToDataUri = (file: File): Promise<string> => {
   });
 };
 
-function PostItemFormContent() {
+type ValuationData = DeviceValuatorOutput & {
+    images: File[];
+};
+interface PostItemFormProps {
+    valuationData?: ValuationData;
+}
+
+function PostItemFormContent({ valuationData }: PostItemFormProps) {
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -104,7 +112,6 @@ function PostItemFormContent() {
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
   const [isValuating, setIsValuating] = useState(false);
-
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -130,27 +137,46 @@ function PostItemFormContent() {
   const [debouncedCategory] = useDebounce(formCategory, 500);
 
   useEffect(() => {
-    const title = searchParams.get('title');
-    const category = searchParams.get('category');
-    const minPriceParam = searchParams.get('minPrice');
-    const maxPriceParam = searchParams.get('maxPrice');
+    if (valuationData) {
+        form.setValue('title', valuationData.suggestedTitle);
+        form.setValue('category', valuationData.suggestedCategory);
+        form.setValue('images', valuationData.images);
+        
+        const previews = valuationData.images.map(file => URL.createObjectURL(file));
+        setImagePreviews(previews);
 
-    if (title) form.setValue('title', title);
-    if (category) form.setValue('category', category);
-    if (minPriceParam && maxPriceParam) {
-        const min = parseInt(minPriceParam, 10);
-        const max = parseInt(maxPriceParam, 10);
-        setMinPrice(min);
-        setMaxPrice(max);
-        const initialPrice = Math.round((min + max) / 2);
-        setSelectedPrice(initialPrice);
-        form.setValue('price', initialPrice);
+        if (valuationData.estimatedMinValue && valuationData.estimatedMaxValue) {
+            const min = valuationData.estimatedMinValue;
+            const max = valuationData.estimatedMaxValue;
+            setMinPrice(min);
+            setMaxPrice(max);
+            const initialPrice = Math.round((min + max) / 2);
+            setSelectedPrice(initialPrice);
+            form.setValue('price', initialPrice);
+        }
+    } else {
+        const title = searchParams.get('title');
+        const category = searchParams.get('category');
+        const minPriceParam = searchParams.get('minPrice');
+        const maxPriceParam = searchParams.get('maxPrice');
+
+        if (title) form.setValue('title', title);
+        if (category) form.setValue('category', category);
+        if (minPriceParam && maxPriceParam) {
+            const min = parseInt(minPriceParam, 10);
+            const max = parseInt(maxPriceParam, 10);
+            setMinPrice(min);
+            setMaxPrice(max);
+            const initialPrice = Math.round((min + max) / 2);
+            setSelectedPrice(initialPrice);
+            form.setValue('price', initialPrice);
+        }
     }
-  }, [searchParams, form]);
+  }, [valuationData, searchParams, form]);
 
 
   const triggerValuation = useCallback(async (brand: string, category: string, images: File[]) => {
-      if (isValuating || !brand || !category || images.length === 0) return;
+      if (valuationData || isValuating || !brand || !category || images.length === 0) return;
 
       setIsValuating(true);
       toast({ title: 'AI Valuator Started', description: 'Analyzing your item to suggest a title, category, and price...' });
@@ -183,17 +209,19 @@ function PostItemFormContent() {
       } finally {
           setIsValuating(false);
       }
-  }, [form, isValuating, toast]);
+  }, [form, isValuating, toast, valuationData]);
   
   useEffect(() => {
+      if (valuationData) return;
       // Trigger valuation only when these debounced values change and are valid
       if (debouncedBrand && debouncedCategory && formImages.length > 0) {
           triggerValuation(debouncedBrand, debouncedCategory, formImages);
       }
-  }, [debouncedBrand, debouncedCategory, formImages, triggerValuation]);
+  }, [debouncedBrand, debouncedCategory, formImages, triggerValuation, valuationData]);
   
 
   const uploadImagesAndUpdateDoc = async (images: File[], docId: string): Promise<void> => {
+    if (!firestore) return;
     const storage = getStorage();
     const imageUrls: string[] = [];
     try {
@@ -203,7 +231,7 @@ function PostItemFormContent() {
         const downloadURL = await getDownloadURL(snapshot.ref);
         imageUrls.push(downloadURL);
       }
-      const itemRef = doc(firestore!, "items", docId);
+      const itemRef = doc(firestore, "items", docId);
       await updateDoc(itemRef, { imageUrls: imageUrls });
       console.log("Item document updated with image URLs.");
     } catch (error) {
@@ -329,7 +357,7 @@ function PostItemFormContent() {
     <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {!minPrice && (
+        {!valuationData && !minPrice && (
             <Alert className="bg-accent/10 border-accent/30">
             <Tag className="h-4 w-4 text-accent" />
             <AlertTitle className="text-accent">Unsure of the value?</AlertTitle>
@@ -350,23 +378,25 @@ function PostItemFormContent() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Images (up to 5)</FormLabel>
-              <FormDescription>The AI valuator will automatically run after you select a brand, category, and upload a photo.</FormDescription>
+              {!valuationData && <FormDescription>The AI valuator will automatically run after you select a brand, category, and upload a photo.</FormDescription>}
               <FormControl>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                   {imagePreviews.map((src, index) => (
                       <div key={index} className="relative aspect-square">
                           <Image src={src} alt={`Preview ${index+1}`} fill className="rounded-md object-cover" />
-                          <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(index)}>
-                              <X className="h-4 w-4" />
-                          </Button>
+                          {!valuationData && (
+                            <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(index)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                          )}
                       </div>
                   ))}
-                  {imagePreviews.length < 5 && (
+                  {imagePreviews.length < 5 && !valuationData && (
                     <>
                       <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                           <ImagePlus className="h-8 w-8" />
                           <span className="mt-2 text-xs text-center">From Gallery</span>
-                          <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isSubmitting} />
+                          <input type="file" multiple accept="image/*" className="sr-only" onChange={handleImageChange} disabled={isSubmitting || !!valuationData} />
                       </label>
                       <button type="button" onClick={() => setIsCameraOpen(true)} className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/50 text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                           <Camera className="h-8 w-8" />
@@ -388,7 +418,7 @@ function PostItemFormContent() {
             <FormItem>
               <FormLabel>Brand</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating} />
+                <Input placeholder="e.g. 'Apple', 'Samsung', 'Dell'" {...field} disabled={isSubmitting || isValuating || !!valuationData} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -401,7 +431,7 @@ function PostItemFormContent() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting || isValuating || !!valuationData}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category for your electronic device" />
@@ -423,7 +453,7 @@ function PostItemFormContent() {
             <FormItem>
               <FormLabel>Listing Title</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating} />
+                <Input placeholder="e.g. 'Lightly Used Modern Laptop'" {...field} disabled={isSubmitting || isValuating || !!valuationData} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -439,16 +469,20 @@ function PostItemFormContent() {
               <FormControl>
                 <Textarea placeholder="Describe your electronic item in detail..." rows={6} {...field} disabled={isSubmitting || isDescriptionGenerating || isValuating} />
               </FormControl>
-               <FormDescription>
-                Provide a title and category, then let AI help you write a great description for your gadget.
-              </FormDescription>
-              <FormMessage />
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating || isSubmitting || isValuating}>
-                  {isDescriptionGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Generate Description
-                </Button>
-              </div>
+               {!valuationData && (
+                <>
+                <FormDescription>
+                    Provide a title and category, then let AI help you write a great description for your gadget.
+                </FormDescription>
+                <FormMessage />
+                <div className="flex flex-wrap gap-2 pt-2">
+                    <Button type="button" variant="outline" size="sm" onClick={handleGenerateDescription} disabled={isDescriptionGenerating || isSubmitting || isValuating}>
+                    {isDescriptionGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Generate Description
+                    </Button>
+                </div>
+                </>
+               )}
             </FormItem>
           )}
         />
@@ -605,31 +639,33 @@ function PostItemFormContent() {
         </Button>
       </form>
     </Form>
-    <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Capture Device Photo</DialogTitle>
-          <DialogDescription>
-            Center your device in the frame and take a clear picture.
-          </DialogDescription>
-        </DialogHeader>
-        <CameraCapture
-          onCapture={(file) => {
-            addImages([file]);
-            setIsCameraOpen(false);
-          }}
-        />
-      </DialogContent>
-    </Dialog>
+    {!valuationData && (
+        <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="max-w-xl">
+            <DialogHeader>
+            <DialogTitle>Capture Device Photo</DialogTitle>
+            <DialogDescription>
+                Center your device in the frame and take a clear picture.
+            </DialogDescription>
+            </DialogHeader>
+            <CameraCapture
+            onCapture={(file) => {
+                addImages([file]);
+                setIsCameraOpen(false);
+            }}
+            />
+        </DialogContent>
+        </Dialog>
+    )}
     </>
   )
 }
 
 // Wrap the component that uses useSearchParams with Suspense
-export function PostItemForm() {
+export function PostItemForm({ valuationData }: PostItemFormProps) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <PostItemFormContent />
+      <PostItemFormContent valuationData={valuationData} />
     </Suspense>
   )
 }

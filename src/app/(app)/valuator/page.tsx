@@ -1,24 +1,23 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import Image from "next/image";
+import React, { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Image from "next/image";
 import { deviceValuator, type DeviceValuatorOutput } from '@/ai/flows/device-valuator-flow';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, Tag, ArrowRight, ImagePlus, X, Camera } from 'lucide-react';
+import { Loader2, Sparkles, Tag, ImagePlus, X, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CameraCapture } from '@/components/camera-capture';
+import { PostItemForm } from '@/components/post-item-form';
 
 
 const valuatorFormSchema = z.object({
@@ -47,11 +46,14 @@ const fileToDataUri = (file: File): Promise<string> => {
   });
 };
 
-export default function ValuatorPage() {
+type ValuatorResult = DeviceValuatorOutput & {
+  images: File[];
+};
+
+function ValuatorPageContent() {
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<DeviceValuatorOutput | null>(null);
+  const [result, setResult] = useState<ValuatorResult | null>(null);
   const { toast } = useToast();
-  const router = useRouter();
   const [imagePreviews, setImagePreviews] = React.useState<string[]>([])
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
@@ -80,7 +82,7 @@ export default function ValuatorPage() {
         model: values.model,
         photoDataUris: photoDataUris,
       });
-      setResult(valuationResult);
+      setResult({ ...valuationResult, images: values.images });
     } catch (error) {
       console.error('Error getting valuation:', error);
       toast({
@@ -91,16 +93,6 @@ export default function ValuatorPage() {
     } finally {
       setIsLoading(false);
     }
-  }
-  
-  const handleListNow = () => {
-    if (!result) return;
-    const params = new URLSearchParams();
-    params.set('title', result.suggestedTitle);
-    params.set('category', result.suggestedCategory);
-    params.set('minPrice', result.estimatedMinValue.toString());
-    params.set('maxPrice', result.estimatedMaxValue.toString());
-    router.push(`/post?${params.toString()}`);
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,7 +120,6 @@ export default function ValuatorPage() {
     form.setValue("images", currentImages);
   };
 
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-12">
@@ -141,39 +132,18 @@ export default function ValuatorPage() {
 
   if (result) {
     return (
-       <Card className="max-w-2xl mx-auto">
-        <CardHeader className="text-center">
-            <Sparkles className="h-10 w-10 text-accent mx-auto" />
-            <CardTitle className="font-headline text-2xl mt-2">Valuation Report</CardTitle>
-            <CardDescription>Here's what our AI thinks your device is worth.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="text-center bg-primary/10 rounded-lg p-6">
-                <p className="text-sm font-semibold text-primary">Estimated Resale Value on Zwitch</p>
-                <p className="font-headline text-4xl font-bold text-primary">
-                    ₹{result.estimatedMinValue.toLocaleString('en-IN')} - ₹{result.estimatedMaxValue.toLocaleString('en-IN')}
-                </p>
-            </div>
-             <div className="space-y-2">
-                <p className="font-semibold">AI Recommendation:</p>
-                <p className="text-muted-foreground p-4 bg-muted rounded-lg border">{result.recommendation}</p>
-             </div>
-              <div className="space-y-2">
-                <p className="font-semibold">Suggested Listing Title:</p>
-                <p className="text-muted-foreground p-4 bg-muted rounded-lg border">{result.suggestedTitle}</p>
-             </div>
-        </CardContent>
-        <CardFooter className="flex-col gap-4">
-            <Button size="lg" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleListNow}>
-                List this item now! <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => { setResult(null); form.reset(); setImagePreviews([]); }}>
-                Value Another Item
-            </Button>
-        </CardFooter>
-       </Card>
+      <Card className="max-w-3xl mx-auto">
+         <CardHeader>
+           <CardTitle className="font-headline text-2xl">List Your Item</CardTitle>
+           <CardDescription>We've pre-filled the details based on our AI valuation. Just confirm and post!</CardDescription>
+         </CardHeader>
+         <CardContent>
+            <PostItemForm valuationData={result} />
+         </CardContent>
+      </Card>
     );
   }
+
 
   return (
     <>
@@ -308,4 +278,10 @@ export default function ValuatorPage() {
   );
 }
 
-    
+export default function ValuatorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ValuatorPageContent />
+    </Suspense>
+  )
+}
