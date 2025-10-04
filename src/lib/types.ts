@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type User = {
@@ -20,7 +21,7 @@ export type ItemStatus = 'Available' | 'Sold' | 'Recycled';
 export type Item = {
   id: string;
   title: string;
-  brand: string;
+  brand?: string;
   description: string;
   price: number;
   category: string;

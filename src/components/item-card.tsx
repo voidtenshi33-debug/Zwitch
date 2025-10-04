@@ -1,7 +1,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, MapPin, Star } from "lucide-react"
+import { Heart, MapPin, Star, ImageOff } from "lucide-react"
 import { Timestamp } from 'firebase/firestore';
 import React, { useState, useEffect } from "react";
 
@@ -86,13 +86,17 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
         <Link href={`/item/${item.id}`} className="absolute inset-0 z-10">
             <span className="sr-only">View Item</span>
         </Link>
-        <div className="aspect-[4/3] w-full">
-            <Image
-                src={item.imageUrls[0]}
-                alt={item.title}
-                fill
-                className="object-cover"
-            />
+        <div className="aspect-[4/3] w-full bg-secondary flex items-center justify-center">
+            {item.imageUrls && item.imageUrls.length > 0 ? (
+              <Image
+                  src={item.imageUrls[0]}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+              />
+            ) : (
+              <ImageOff className="h-12 w-12 text-muted-foreground" />
+            )}
         </div>
         <div className="absolute top-2 left-2 flex gap-2">
             {item.isFeatured && <Badge className="bg-yellow-500 text-black hover:bg-yellow-600"><Star className="mr-1 h-3 w-3" /> Featured</Badge>}
@@ -114,7 +118,7 @@ export function ItemCard({ item, userWishlist = [] }: ItemCardProps) {
               <Link href={`/item/${item.id}`} className="hover:underline z-10 relative">{item.title}</Link>
           </h3>
           <p className="font-headline text-xl font-bold text-foreground mt-1">
-            {item.listingType === "Sell" ? <span className="text-primary">For Sale</span> : <span className="text-primary">{item.listingType}</span>}
+            {item.listingType === "Sell" ? `₹${item.price.toLocaleString('en-IN')}` : <span className="text-primary">{item.listingType}</span>}
           </p>
         </div>
         <div className="flex items-center text-sm text-muted-foreground mt-2">
