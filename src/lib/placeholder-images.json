@@ -1,3 +1,88 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "onboarding-post",
+      "description": "A person taking a picture of a laptop",
+      "imageUrl": "https://images.unsplash.com/photo-1697777461186-0b51945f11db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwb3N0JTIwaXRlbXxlbnwwfHx8fDE3NTk1NjI1MzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "post item"
+    },
+    {
+      "id": "onboarding-connect",
+      "description": "Two people shaking hands over a deal",
+      "imageUrl": "https://images.unsplash.com/photo-1627724046158-e9356cd0d27a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjb25uZWN0JTIwcGVvcGxlfGVufDB8fHx8MTc1OTU2MjUzNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "connect people"
+    },
+    {
+      "id": "onboarding-recycle",
+      "description": "A person putting an old phone into a recycling bin",
+      "imageUrl": "https://images.unsplash.com/photo-1550505393-2c5dbec5de87?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cmVjeWNsZSUyMGVsZWN0cm9uaWNzfGVufDB8fHx8MTc1OTU2MjUzNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "recycle electronics"
+    },
+    {
+      "id": "avatar-1",
+      "description": "Avatar for Alex Doe",
+      "imageUrl": "https://images.unsplash.com/photo-1535643302794-19c3804b874b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NTk1MDY2MzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Avatar for Jane Smith",
+      "imageUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzU5NTQ4MjA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman smiling"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Avatar for Ben Starr",
+      "imageUrl": "https://images.unsplash.com/photo-1557862921-37829c790f19?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYW4lMjBnbGFzc2VzfGVufDB8fHx8MTc1OTQ4NzI5M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man glasses"
+    },
+    {
+      "id": "item-laptop",
+      "description": "A modern laptop on a desk",
+      "imageUrl": "https://images.unsplash.com/photo-1515965885361-f1e0095517ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxsYXB0b3AlMjBkZXNrfGVufDB8fHx8MTc1OTQ4NzkxM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "laptop desk"
+    },
+    {
+      "id": "item-phone",
+      "description": "A smartphone being held",
+      "imageUrl": "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzbWFydHBob25lJTIwaGFuZHxlbnwwfHx8fDE3NTk0OTYwMzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smartphone hand"
+    },
+    {
+      "id": "item-keyboard",
+      "description": "A mechanical keyboard with colorful lighting",
+      "imageUrl": "https://images.unsplash.com/photo-1664813398575-819b46e5ab8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bWVjaGFuaWNhbCUyMGtleWJvYXJkfGVufDB8fHx8MTc1OTUyODk4MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mechanical keyboard"
+    },
+    {
+      "id": "item-camera",
+      "description": "A vintage film camera on a strap",
+      "imageUrl": "https://images.unsplash.com/photo-1495121553079-4c61bcce1894?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx2aW50YWdlJTIwY2FtZXJhfGVufDB8fHx8MTc1OTUwNjczNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage camera"
+    },
+    {
+      "id": "item-headphones",
+      "description": "Wireless over-ear headphones",
+      "imageUrl": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3aXJlbGVzcyUyMGhlYWRwaG9uZXN8ZW58MHx8fHwxNzU5NTQyNTY3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wireless headphones"
+    },
+    {
+      "id": "item-drone",
+      "description": "A quadcopter drone flying",
+      "imageUrl": "https://images.unsplash.com/photo-1697389843924-7c7bdf5be4b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkcm9uZSUyMHNreXxlbnwwfHx8fDE3NTk0OTEyMDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "drone sky"
+    },
+    {
+      "id": "item-tablet",
+      "description": "A digital tablet with a stylus",
+      "imageUrl": "https://images.unsplash.com/photo-1726217055743-5e0238ba883c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx0YWJsZXQlMjBzdHlsdXN8ZW58MHx8fHwxNzU5NTI5MjIwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "tablet stylus"
+    },
+    {
+      "id": "item-monitor",
+      "description": "A curved ultrawide computer monitor",
+      "imageUrl": "https://images.unsplash.com/photo-1579765754037-5bfef757251a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb21wdXRlciUyMG1vbml0b3J8ZW58MHx8fHwxNzU5NTU1ODEyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "computer monitor"
+    }
+  ]
 }
